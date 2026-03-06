@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Game;
 use App\Models\Sport;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -18,25 +19,33 @@ class SportController extends Controller
 
     public function show(Request $request, Sport $sport): View
     {
-        $sport->load(['categories.games' => function ($q) {
-            $q->with(['teamHome', 'teamAway', 'winner'])->orderBy('match_number');
-        }]);
-
         $selectedCategory = $request->query('category');
 
-        $visibleCategories = $selectedCategory
-            ? $sport->categories->where('slug', $selectedCategory)
-            : $sport->categories;
+        $categories = $sport->categories()->get();
 
-        // Fetch teams once, reuse across all categories
+        $gamesQuery = Game::with(['teamHome', 'teamAway', 'winner', 'category'])
+            ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
+            ->orderBy('match_number');
+
+        if ($selectedCategory) {
+            $gamesQuery->whereHas('category', fn ($q) => $q->where('slug', $selectedCategory));
+        }
+
+        $games = $gamesQuery->get()->groupBy('category_id');
+
+        $visibleCategories = $selectedCategory
+            ? $categories->where('slug', $selectedCategory)
+            : $categories;
+
         $teams = Team::orderBy('name')->get()->keyBy('id');
 
         $standingsByCategory = [];
         foreach ($visibleCategories as $category) {
-            $standingsByCategory[$category->id] = $this->computeStandings($category->games, $teams);
+            $categoryGames = $games[$category->id] ?? collect();
+            $standingsByCategory[$category->id] = $this->computeStandings($categoryGames, $teams);
         }
 
-        return view('scores.show', compact('sport', 'selectedCategory', 'standingsByCategory'));
+        return view('scores.show', compact('sport', 'selectedCategory', 'standingsByCategory', 'visibleCategories', 'games', 'categories'));
     }
 
     /**

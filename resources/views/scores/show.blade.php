@@ -18,18 +18,18 @@
         <span class="text-5xl">{{ $sport->icon }}</span>
         <div>
             <h1 class="text-3xl font-black text-white">{{ $sport->name }}</h1>
-            <p class="text-slate-400 text-sm mt-1">{{ $sport->categories->count() }} {{ Str::plural('category', $sport->categories->count()) }} &middot; Round Robin</p>
+            <p class="text-slate-400 text-sm mt-1">{{ $categories->count() }} {{ Str::plural('category', $categories->count()) }} &middot; Round Robin</p>
         </div>
     </div>
 
     {{-- Category filter --}}
-    @if($sport->categories->count() > 1)
+    @if($categories->count() > 1)
     <div class="flex flex-wrap items-center gap-2 mb-8">
         <a href="{{ route('scores.show', $sport) }}"
            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {{ !$selectedCategory ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white' }}">
             All
         </a>
-        @foreach($sport->categories as $cat)
+        @foreach($categories as $cat)
         <a href="{{ route('scores.show', ['sport' => $sport, 'category' => $cat->slug]) }}"
            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {{ $selectedCategory === $cat->slug ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white' }}">
             {{ $cat->name }}
@@ -39,21 +39,16 @@
     @endif
 
     {{-- Categories --}}
-    @php
-        $visibleCategories = $selectedCategory
-            ? $sport->categories->where('slug', $selectedCategory)
-            : $sport->categories;
-    @endphp
-
     <div>
         @foreach($visibleCategories as $category)
         <div class="{{ !$loop->first ? 'pt-16' : '' }}">
             <h2 class="text-xl font-bold text-white mb-4">{{ $category->name }}</h2>
 
             @php
-                $completed = $category->games->where('status', 'completed')->count();
-                $total = $category->games->count();
-                $live = $category->games->where('status', 'in_progress')->count();
+                $categoryGames = $games[$category->id] ?? collect();
+                $completed = $categoryGames->where('status', 'completed')->count();
+                $total = $categoryGames->count();
+                $live = $categoryGames->where('status', 'in_progress')->count();
                 $standings = $standingsByCategory[$category->id] ?? [];
             @endphp
 
@@ -121,7 +116,7 @@
             {{-- Matches --}}
             <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Matches</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                @foreach($category->games->sortBy('match_number') as $game)
+                @foreach($categoryGames->sortBy('match_number') as $game)
                 <x-game-card :game="$game" />
                 @endforeach
             </div>
@@ -132,7 +127,7 @@
 
 {{-- Live polling script --}}
 @php
-    $allGames = $visibleCategories->flatMap->games;
+    $allGames = $visibleCategories->flatMap(fn ($cat) => $games[$cat->id] ?? []);
     $liveGameIds = $allGames->where('status', 'in_progress')->pluck('id')->toArray();
     $allGameIds = $allGames->pluck('id')->toArray();
 @endphp
