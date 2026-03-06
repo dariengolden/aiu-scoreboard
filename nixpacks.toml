@@ -1,18 +1,15 @@
 # Railway deployment configuration (Nixpacks)
 # https://nixpacks.com/docs/configuration/file
 
-# Let Nixpacks auto-detect PHP 8.4 from composer.json
-# and handle extensions via composer.json "require" section.
-
-# Set NIXPACKS_PHP_ROOT_DIR=/app/public in Railway env vars
-# so Nginx serves from Laravel's public/ directory.
+# PHP 8.4 is auto-detected from composer.json.
+# NIXPACKS_PHP_ROOT_DIR=/app/public is auto-set for Laravel apps.
+# Nginx + PHP-FPM start command is auto-configured.
 
 [phases.build]
 cmds = [
     "npm run build",
     "php artisan view:cache",
-    "php artisan route:cache"
+    "php artisan route:cache",
+    "php artisan migrate --force",
+    "php artisan db:seed --force"
 ]
-
-[start]
-cmd = "bash /app/start.sh"
