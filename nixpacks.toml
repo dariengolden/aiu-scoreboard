@@ -11,3 +11,12 @@ cmds = [
     "php artisan view:cache",
     "php artisan route:cache"
 ]
+
+[phases.setup]
+aptPkgs = ["...", "php-opcache"]
+
+[variables]
+PHP_OPCACHE_ENABLE = "1"
+PHP_OPCACHE_MEMORY_CONSUMPTION = "128"
+PHP_OPCACHE_MAX_ACCELERATED_FILES = "10000"
+PHP_OPCACHE_VALIDATE_TIMESTAMPS = "0"

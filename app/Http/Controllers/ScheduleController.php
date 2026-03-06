@@ -45,13 +45,13 @@ class ScheduleController extends Controller
 
         // Determine the two-week calendar range from the earliest game date
         // Fallback to current date if no games exist
-        $allGamesForRange = Game::whereNotNull('scheduled_at')
-            ->orderBy('scheduled_at')
-            ->get();
+        $dateRange = Game::whereNotNull('scheduled_at')
+            ->selectRaw('MIN(scheduled_at) as first_date, MAX(scheduled_at) as last_date')
+            ->first();
 
-        if ($allGamesForRange->isNotEmpty()) {
-            $firstDate = $allGamesForRange->first()->scheduled_at->copy()->startOfDay();
-            $lastDate = $allGamesForRange->last()->scheduled_at->copy()->startOfDay();
+        if ($dateRange->first_date && $dateRange->last_date) {
+            $firstDate = Carbon::parse($dateRange->first_date)->startOfDay();
+            $lastDate = Carbon::parse($dateRange->last_date)->startOfDay();
 
             // Start from the Sunday (start of week) on or before the first game
             $calendarStart = $firstDate->copy()->startOfWeek(Carbon::SUNDAY);

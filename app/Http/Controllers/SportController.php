@@ -28,9 +28,12 @@ class SportController extends Controller
             ? $sport->categories->where('slug', $selectedCategory)
             : $sport->categories;
 
+        // Fetch teams once, reuse across all categories
+        $teams = Team::orderBy('name')->get()->keyBy('id');
+
         $standingsByCategory = [];
         foreach ($visibleCategories as $category) {
-            $standingsByCategory[$category->id] = $this->computeStandings($category->games);
+            $standingsByCategory[$category->id] = $this->computeStandings($category->games, $teams);
         }
 
         return view('scores.show', compact('sport', 'selectedCategory', 'standingsByCategory'));
@@ -40,9 +43,8 @@ class SportController extends Controller
      * Compute round-robin standings from games.
      * Points: Win = 3, Draw = 1, Loss = 0
      */
-    private function computeStandings($games): array
+    private function computeStandings($games, $teams): array
     {
-        $teams = Team::orderBy('name')->get()->keyBy('id');
         $stats = [];
 
         foreach ($teams as $team) {

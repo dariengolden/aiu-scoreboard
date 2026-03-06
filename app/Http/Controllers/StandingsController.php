@@ -19,7 +19,8 @@ class StandingsController extends Controller
             ->get();
 
         $sports = Sport::orderBy('order')->get();
-        $standings = $this->computeStandings($games);
+        $teams = Team::orderBy('name')->get()->keyBy('id');
+        $standings = $this->computeStandings($games, $teams);
 
         return view('standings.show', compact('sport', 'category', 'games', 'sports', 'standings'));
     }
@@ -28,9 +29,8 @@ class StandingsController extends Controller
      * Compute round-robin standings from games.
      * Points: Win = 3, Draw = 1, Loss = 0
      */
-    private function computeStandings($games): array
+    private function computeStandings($games, $teams): array
     {
-        $teams = Team::orderBy('name')->get()->keyBy('id');
         $stats = [];
 
         foreach ($teams as $team) {
