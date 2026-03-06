@@ -47,18 +47,22 @@ class GameSeeder extends Seeder
             return ++$matchNumbers[$categoryId];
         };
 
-        // Helper to create a game
+        // Helper to create a game (idempotent — uses firstOrCreate to avoid duplicates)
         $game = function (string $sportName, string $categoryName, string $home, string $away, int $day, string $startTime, ?string $location = null) use ($teams, $cat, $dt, $nextMatch) {
             $category = $cat($sportName, $categoryName);
-            Game::create([
-                'category_id' => $category->id,
-                'match_number' => $nextMatch($category->id),
-                'team_home_id' => $teams[$home],
-                'team_away_id' => $teams[$away],
-                'status' => 'upcoming',
-                'scheduled_at' => $dt($day, $startTime),
-                'location' => $location,
-            ]);
+            Game::firstOrCreate(
+                [
+                    'category_id' => $category->id,
+                    'match_number' => $nextMatch($category->id),
+                ],
+                [
+                    'team_home_id' => $teams[$home],
+                    'team_away_id' => $teams[$away],
+                    'status' => 'upcoming',
+                    'scheduled_at' => $dt($day, $startTime),
+                    'location' => $location,
+                ]
+            );
         };
 
         // =====================================================================
@@ -255,20 +259,24 @@ class GameSeeder extends Seeder
 
         foreach ($runningEvents as $event) {
             $category = $cat('Running', $event[0]);
-            Game::create([
-                'category_id' => $category->id,
-                'match_number' => $nextMatch($category->id),
-                'team_home_id' => $teams['Red'],
-                'team_away_id' => $teams['Purple'],
-                'status' => 'upcoming',
-                'scheduled_at' => (function () use ($event) {
-                    [$h, $m] = explode(':', $event[1]);
+            Game::firstOrCreate(
+                [
+                    'category_id' => $category->id,
+                    'match_number' => $nextMatch($category->id),
+                ],
+                [
+                    'team_home_id' => $teams['Red'],
+                    'team_away_id' => $teams['Purple'],
+                    'status' => 'upcoming',
+                    'scheduled_at' => (function () use ($event) {
+                        [$h, $m] = explode(':', $event[1]);
 
-                    return Carbon::create(2026, 3, 22, (int) $h, (int) $m, 0, 'Asia/Bangkok');
-                })(),
-                'location' => 'Track',
-                'notes' => 'All 4 teams compete — not a head-to-head match.',
-            ]);
+                        return Carbon::create(2026, 3, 22, (int) $h, (int) $m, 0, 'Asia/Bangkok');
+                    })(),
+                    'location' => 'Track',
+                    'notes' => 'All 4 teams compete — not a head-to-head match.',
+                ]
+            );
         }
     }
 }
