@@ -171,7 +171,7 @@
             </div>
 
             {{-- Period / Set breakdown --}}
-            @if($hasBreakdown || $hasDisciplineData)
+            @if($hasBreakdown)
                 <div class="bg-[#0f172a] rounded-2xl border border-white/5 overflow-hidden">
                     <div class="px-4 py-3 border-b border-white/5">
                         <h2 class="text-sm font-bold text-white uppercase tracking-wider">
