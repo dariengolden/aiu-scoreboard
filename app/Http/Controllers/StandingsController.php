@@ -13,13 +13,20 @@ class StandingsController extends Controller
     {
         abort_unless($category->sport_id === $sport->id, 404);
 
-        $games = $category->games()
-            ->with(['teamHome', 'teamAway', 'winner'])
-            ->orderBy('match_number')
-            ->get();
+        $games = cache()->remember('standings_games_'.$category->id, 30, function () use ($category) {
+            return $category->games()
+                ->with(['teamHome', 'teamAway', 'winner'])
+                ->orderBy('match_number')
+                ->get();
+        });
 
-        $sports = Sport::orderBy('order')->get();
-        $teams = Team::orderBy('name')->get()->keyBy('id');
+        $sports = cache()->remember('standings_sports_ordered', 600, function () {
+            return Sport::orderBy('order')->get();
+        });
+
+        $teams = cache()->remember('teams_by_id', 600, function () {
+            return Team::orderBy('name')->get()->keyBy('id');
+        });
         $standings = $this->computeStandings($games, $teams);
 
         return view('standings.show', compact('sport', 'category', 'games', 'sports', 'standings'));

@@ -13,7 +13,11 @@ class GameResource extends JsonResource
             'id' => $this->id,
             'matchNumber' => $this->match_number,
             'status' => $this->status,
+            // Keep raw datetime for potential future use, but also provide a
+            // preformatted time string so the client can display times without
+            // introducing timezone shifts.
             'scheduledAt' => $this->scheduled_at,
+            'scheduledTime' => $this->scheduled_at?->format('g:ia'),
             'location' => $this->location,
             'scoreHome' => $this->score_home,
             'scoreAway' => $this->score_away,

@@ -635,7 +635,8 @@
                     desktopHtml += '<div class="px-1.5 pb-1.5 flex-1 space-y-0.5 overflow-y-auto">';
                     dayGames.forEach(game => {
                         const statusColor = game.status === 'in_progress' ? 'border-l-green-500 bg-green-500/10' : (game.status === 'completed' ? 'border-l-blue-500/50 bg-blue-500/5' : 'border-l-slate-600 bg-white/[0.03]');
-                        const gameTime = new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                        // Use server-formatted time string to avoid client timezone differences
+                        const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                         desktopHtml += `<div class="border-l-2 ${statusColor} rounded-r px-1.5 py-1 group cursor-default" title="${game.category.sport.name} ${game.category.name} — ${game.teamHome.name} vs ${game.teamAway.name} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
                             <div class="flex items-center gap-1 min-w-0">
                                 <span class="text-[11px] shrink-0">${game.category.sport.icon}</span>
@@ -696,7 +697,7 @@
                         <div class="divide-y divide-white/5">`;
 
                     dayGames.forEach(game => {
-                        const gameTime = new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                        const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                         mobileHtml += `<div class="px-4 py-3">
                             <div class="flex items-start gap-3">
                                 <div class="shrink-0 w-14 pt-0.5 text-right">

@@ -12,7 +12,9 @@ class SportController extends Controller
 {
     public function index(): View
     {
-        $sports = Sport::orderBy('order')->with('categories')->get();
+        $sports = cache()->remember('scores_sports_with_categories', 600, function () {
+            return Sport::orderBy('order')->with('categories')->get();
+        });
 
         return view('scores.index', compact('sports'));
     }
@@ -28,26 +30,30 @@ class SportController extends Controller
             $selectedCategory = $menCategory?->slug;
         }
 
-        $gamesQuery = Game::select([
-                'id',
-                'category_id',
-                'team_home_id',
-                'team_away_id',
-                'score_home',
-                'score_away',
-                'status',
-                'winner_id',
-                'match_number',
-            ])
-            ->with(['teamHome', 'teamAway', 'winner', 'category'])
-            ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
-            ->orderBy('match_number');
+        $cacheKey = 'scores_games_'.$sport->id.'_'.($selectedCategory ?: 'all');
 
-        if ($selectedCategory) {
-            $gamesQuery->whereHas('category', fn ($q) => $q->where('slug', $selectedCategory));
-        }
+        $games = cache()->remember($cacheKey, 30, function () use ($sport, $selectedCategory) {
+            $gamesQuery = Game::select([
+                    'id',
+                    'category_id',
+                    'team_home_id',
+                    'team_away_id',
+                    'score_home',
+                    'score_away',
+                    'status',
+                    'winner_id',
+                    'match_number',
+                ])
+                ->with(['teamHome', 'teamAway', 'winner', 'category'])
+                ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
+                ->orderBy('match_number');
 
-        $games = $gamesQuery->get()->groupBy('category_id');
+            if ($selectedCategory) {
+                $gamesQuery->whereHas('category', fn ($q) => $q->where('slug', $selectedCategory));
+            }
+
+            return $gamesQuery->get()->groupBy('category_id');
+        });
 
         $visibleCategories = $selectedCategory
             ? $categories->where('slug', $selectedCategory)
