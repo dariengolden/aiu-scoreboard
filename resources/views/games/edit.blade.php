@@ -8,6 +8,7 @@
     $sportSlug = $game->category->sport->slug;
     $sportConfig = $game->sport_config;
     $sportType = $sportConfig['type'] ?? 'simple';
+    $disciplineConfig = $sportConfig['discipline'] ?? null;
     $gameData = $game->game_data ?? [];
     $gameFormat = $game->game_format;
     $maxPeriods = $game->max_periods;
@@ -386,6 +387,70 @@
             </div>
         </div>
 
+        {{-- Cards (sport-specific, e.g. soccer) --}}
+        @if($disciplineConfig)
+        @php
+            $showYellow = $disciplineConfig['yellow'] ?? false;
+            $showRed = $disciplineConfig['red'] ?? false;
+        @endphp
+        @if($showYellow || $showRed)
+        <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 space-y-4">
+            <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Discipline</h2>
+
+            <div class="space-y-3">
+                <p class="block text-xs font-semibold text-slate-400">Cards</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {{-- Home cards --}}
+                    <div class="space-y-2">
+                        <p class="text-[11px] font-semibold text-slate-500 mb-1">Home &middot; {{ $game->teamHome->name }}</p>
+                        <div class="flex items-center gap-2">
+                            @if($showYellow)
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-semibold text-yellow-300 mb-1 uppercase tracking-wider">Yellow</label>
+                                <input type="number" name="yellow_cards_home" min="0"
+                                       value="{{ old('yellow_cards_home', $game->yellow_cards_home) }}"
+                                       class="w-full bg-[#0f172a] border border-yellow-500/40 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 [color-scheme:dark]">
+                            </div>
+                            @endif
+                            @if($showRed)
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-semibold text-red-300 mb-1 uppercase tracking-wider">Red</label>
+                                <input type="number" name="red_cards_home" min="0"
+                                       value="{{ old('red_cards_home', $game->red_cards_home) }}"
+                                       class="w-full bg-[#0f172a] border border-red-500/40 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 [color-scheme:dark]">
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Away cards --}}
+                    <div class="space-y-2">
+                        <p class="text-[11px] font-semibold text-slate-500 mb-1">Away &middot; {{ $game->teamAway->name }}</p>
+                        <div class="flex items-center gap-2">
+                            @if($showYellow)
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-semibold text-yellow-300 mb-1 uppercase tracking-wider">Yellow</label>
+                                <input type="number" name="yellow_cards_away" min="0"
+                                       value="{{ old('yellow_cards_away', $game->yellow_cards_away) }}"
+                                       class="w-full bg-[#0f172a] border border-yellow-500/40 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 [color-scheme:dark]">
+                            </div>
+                            @endif
+                            @if($showRed)
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-semibold text-red-300 mb-1 uppercase tracking-wider">Red</label>
+                                <input type="number" name="red_cards_away" min="0"
+                                       value="{{ old('red_cards_away', $game->red_cards_away) }}"
+                                       class="w-full bg-[#0f172a] border border-red-500/40 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 [color-scheme:dark]">
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        @endif
+
         {{-- Notes --}}
         <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5">
             <label for="notes" class="block text-xs font-semibold text-slate-400 mb-2">Notes (optional)</label>
@@ -637,7 +702,7 @@
 
     function renderPeriodScores() {
         const data = getPeriodData(activePeriodIndex);
-        
+
         // Update custom inputs
         document.querySelectorAll('.period-custom-input').forEach(input => {
             input.value = '';

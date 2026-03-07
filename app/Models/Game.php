@@ -22,6 +22,12 @@ class Game extends Model
         'location',
         'notes',
         'winner_id',
+        'fouls_home',
+        'fouls_away',
+        'yellow_cards_home',
+        'yellow_cards_away',
+        'red_cards_home',
+        'red_cards_away',
     ];
 
     protected $casts = [
@@ -30,6 +36,12 @@ class Game extends Model
         'score_away' => 'integer',
         'match_number' => 'integer',
         'game_data' => 'array',
+        'fouls_home' => 'integer',
+        'fouls_away' => 'integer',
+        'yellow_cards_home' => 'integer',
+        'yellow_cards_away' => 'integer',
+        'red_cards_home' => 'integer',
+        'red_cards_away' => 'integer',
     ];
 
     /**
@@ -45,6 +57,11 @@ class Game extends Model
             'increment_labels' => ['FT', '+2', '+3'],
             'has_time' => true,
             'formats' => null, // no format choice
+            'discipline' => [
+                'fouls' => true,
+                'yellow' => false,
+                'red' => false,
+            ],
         ],
         'soccer' => [
             'type' => 'halves',
@@ -54,6 +71,11 @@ class Game extends Model
             'increment_labels' => ['+1'],
             'has_time' => true,
             'formats' => null,
+            'discipline' => [
+                'fouls' => false,
+                'yellow' => true,
+                'red' => true,
+            ],
         ],
         'volleyball' => [
             'type' => 'sets',

@@ -89,6 +89,9 @@ class ScheduleController extends Controller
         });
 
         $gamesByDate = $games->groupBy(fn ($game) => $game->scheduled_at->format('Y-m-d'));
+        $gamesByDateResource = $gamesByDate->map(
+            fn ($dayGames) => GameResource::collection($dayGames->values())->resolve()
+        );
 
         $calendarDates = collect(CarbonPeriod::create($calendarStart, $calendarEnd))
             ->map(fn ($date) => $date->copy());
@@ -103,6 +106,7 @@ class ScheduleController extends Controller
             'selectedStatuses',
             'selectedColors',
             'gamesByDate',
+            'gamesByDateResource',
             'calendarWeeks',
             'calendarStart',
             'calendarEnd',

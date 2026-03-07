@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'AIU Sports Day')
+@section('title', 'Intramurals 2026')
 
 @section('content')
 
@@ -23,7 +23,7 @@
             Live Now
         </span>
     </div>
-    <div class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 -mb-2" style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; padding-left: calc((100% - 85vw) / 2); padding-right: calc((100% - 85vw) / 2);">
+    <div class="flex gap-4 overflow-x-auto overflow-y-visible scroll-smooth snap-x snap-mandatory pb-2 -mb-2" style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; padding-left: calc((100% - 85vw) / 2); padding-right: calc((100% - 85vw) / 2);">
         @foreach($liveGames as $game)
         <div class="shrink-0 snap-center w-[85vw] max-w-lg">
             <x-game-card :game="$game" />

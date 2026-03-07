@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Game;
+use App\Models\Category;
+use App\Models\Sport;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +13,30 @@ use Illuminate\View\View;
 
 class GameController extends Controller
 {
+    public function showByContext(Sport $sport, string $category, int $match): View
+    {
+        $categoryModel = Category::where('sport_id', $sport->id)
+            ->where('slug', $category)
+            ->firstOrFail();
+
+        $game = Game::with(['category.sport', 'teamHome', 'teamAway', 'winner'])
+            ->where('category_id', $categoryModel->id)
+            ->where(function ($q) use ($match) {
+                $q->where('match_number', $match)
+                  ->orWhere('id', $match);
+            })
+            ->firstOrFail();
+
+        return $this->show($game);
+    }
+
+    public function show(Game $game): View
+    {
+        $game->load(['category.sport', 'teamHome', 'teamAway', 'winner']);
+
+        return view('games.show', compact('game'));
+    }
+
     public function edit(Game $game): View
     {
         $game->load(['category.sport', 'teamHome', 'teamAway', 'winner']);
@@ -32,6 +58,10 @@ class GameController extends Controller
         $validated = $request->validate([
             'score_home' => ['nullable', 'integer', 'min:0'],
             'score_away' => ['nullable', 'integer', 'min:0'],
+            'yellow_cards_home' => ['nullable', 'integer', 'min:0'],
+            'yellow_cards_away' => ['nullable', 'integer', 'min:0'],
+            'red_cards_home' => ['nullable', 'integer', 'min:0'],
+            'red_cards_away' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:upcoming,in_progress,completed'],
             'scheduled_at' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:255'],

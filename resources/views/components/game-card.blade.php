@@ -8,11 +8,14 @@ $sportConfig = $game->sport_config;
 $sportType = $sportConfig['type'] ?? null;
 $gameData = $game->game_data ?? [];
 $isLive = $game->isLive();
+$matchParam = $game->match_number ?? $game->id;
 @endphp
 
-<div class="game-card bg-[#1e293b] rounded-2xl overflow-hidden border border-white/5 hover:border-white/10 transition-colors {{ $isLive ? 'border-green-500/20' : '' }}"
-     data-game-id="{{ $game->id }}"
-     data-is-live="{{ $isLive ? '1' : '0' }}">
+<a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $matchParam]) }}"
+   class="game-card block bg-[#1e293b] rounded-2xl overflow-hidden border border-white/5 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/10 transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 {{ $isLive ? 'border-green-500/20' : '' }}"
+   data-game-id="{{ $game->id }}"
+   data-is-live="{{ $isLive ? '1' : '0' }}"
+   aria-label="{{ $homeTeam->name }} vs {{ $awayTeam->name }} - {{ $game->match_label }}">
     {{-- Sport + Category + Status header --}}
     <div class="px-4 pt-3 pb-2">
         <div class="flex items-center justify-between mb-1">
@@ -114,4 +117,4 @@ $isLive = $game->isLive();
         @endif
     </div>
     @endif
-</div>
+</a>

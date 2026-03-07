@@ -19,6 +19,7 @@ Route::get('/api/schedule', [ScheduleController::class, 'api'])->name('schedule.
 // Route::get('/results', [ResultController::class, 'index'])->name('results');
 Route::get('/scores', [SportController::class, 'index'])->name('scores.index');
 Route::get('/scores/{sport}', [SportController::class, 'show'])->name('scores.show');
+Route::get('/scores/{sport}/{category}/match-{match}', [GameController::class, 'showByContext'])->name('games.show');
 
 // Redirect old standings URLs to the sport page with category filter
 Route::get('/scores/{sport}/{category}', function (Sport $sport, Category $category) {

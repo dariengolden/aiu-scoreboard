@@ -239,7 +239,7 @@
                 $isToday = $date->isSameDay($today);
                 $hasGames = $dayGames->isNotEmpty();
             @endphp
-            <div class="border-r border-b border-white/5 first:border-l min-h-[140px] flex flex-col {{ $isToday ? 'bg-blue-600/[0.07]' : ($hasGames ? 'bg-[#1e293b]/50' : 'bg-[#0f172a]/50') }}">
+            <div class="border-r border-b border-white/5 first:border-l min-h-[140px] flex flex-col {{ $isToday ? 'bg-sky-500/15' : ($hasGames ? 'bg-[#1e293b]/50' : 'bg-[#0f172a]/50') }}">
                 {{-- Date number --}}
                 <div class="px-2 pt-2 pb-1 flex items-center justify-between">
                     <span class="text-sm font-bold {{ $isToday ? 'text-blue-400' : ($hasGames ? 'text-slate-200' : 'text-slate-600') }}">
@@ -306,12 +306,12 @@
             @endphp
 
             @if($hasGames)
-            <div class="rounded-2xl border border-white/5 overflow-hidden {{ $isToday ? 'bg-blue-600/[0.07] border-blue-500/20' : 'bg-[#1e293b]' }}">
+            <div class="rounded-2xl border border-white/5 overflow-hidden {{ $isToday ? 'bg-sky-500/10 border-sky-500/30' : 'bg-[#1e293b]' }}">
                 {{-- Day header --}}
                 <div class="px-4 py-3 flex items-center justify-between border-b border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex flex-col items-center justify-center w-11 h-11 rounded-xl {{ $isToday ? 'bg-blue-600 text-white' : 'bg-[#0f172a] text-slate-300' }}">
-                            <span class="text-[10px] font-semibold uppercase leading-none tracking-wide {{ $isToday ? 'text-blue-200' : 'text-slate-500' }}">{{ $date->format('D') }}</span>
+                        <div class="flex items-center gap-3">
+                        <div class="flex flex-col items-center justify-center w-11 h-11 rounded-xl {{ $isToday ? 'bg-blue-400 text-slate-900' : 'bg-[#0f172a] text-slate-300' }}">
+                            <span class="text-[10px] font-semibold uppercase leading-none tracking-wide {{ $isToday ? 'text-blue-900/70' : 'text-slate-500' }}">{{ $date->format('D') }}</span>
                             <span class="text-lg font-bold leading-tight">{{ $date->day }}</span>
                         </div>
                         <div>
@@ -400,6 +400,7 @@
     const calendarEnd = '{{ $calendarEnd->format("Y-m-d") }}';
     const sportsData = @json($sports->map(fn($s) => ['slug' => $s->slug, 'name' => $s->name, 'icon' => $s->icon]));
     const teamsData = @json($teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'colorHex' => $t->color_hex]));
+    const initialGamesByDate = @json($gamesByDateResource ?? []);
 
     function updateFilterUI() {
         document.querySelectorAll('[data-filter-status]').forEach(btn => {
@@ -623,7 +624,7 @@
                 const isToday = dateKey === today;
                 const hasGames = dayGames.length > 0;
 
-                desktopHtml += `<div class="border-r border-b border-white/5 first:border-l min-h-[140px] flex flex-col ${isToday ? 'bg-blue-600/[0.07]' : (hasGames ? 'bg-[#1e293b]/50' : 'bg-[#0f172a]/50')}">
+                desktopHtml += `<div class="border-r border-b border-white/5 first:border-l min-h-[140px] flex flex-col ${isToday ? 'bg-sky-500/15' : (hasGames ? 'bg-[#1e293b]/50' : 'bg-[#0f172a]/50')}">
                     <div class="px-2 pt-2 pb-1 flex items-center justify-between">
                         <span class="text-sm font-bold ${isToday ? 'text-blue-400' : (hasGames ? 'text-slate-200' : 'text-slate-600')}">
                             ${date.getDate() === 1 || date.getDate() === dates[0].getDate() ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : date.getDate()}
@@ -680,11 +681,11 @@
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                     const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-                    mobileHtml += `<div class="rounded-2xl border border-white/5 overflow-hidden ${isToday ? 'bg-blue-600/[0.07] border-blue-500/20' : 'bg-[#1e293b]'}">
+                    mobileHtml += `<div class="rounded-2xl border border-white/5 overflow-hidden ${isToday ? 'bg-sky-500/10 border-sky-500/30' : 'bg-[#1e293b]'}">
                         <div class="px-4 py-3 flex items-center justify-between border-b border-white/5">
                             <div class="flex items-center gap-3">
-                                <div class="flex flex-col items-center justify-center w-11 h-11 rounded-xl ${isToday ? 'bg-blue-600 text-white' : 'bg-[#0f172a] text-slate-300'}">
-                                    <span class="text-[10px] font-semibold uppercase leading-none tracking-wide ${isToday ? 'text-blue-200' : 'text-slate-500'}">${date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                <div class="flex flex-col items-center justify-center w-11 h-11 rounded-xl ${isToday ? 'bg-blue-400 text-slate-900' : 'bg-[#0f172a] text-slate-300'}">
+                                    <span class="text-[10px] font-semibold uppercase leading-none tracking-wide ${isToday ? 'text-blue-900/70' : 'text-slate-500'}">${date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
                                     <span class="text-lg font-bold leading-tight">${date.getDate()}</span>
                                 </div>
                                 <div>
@@ -740,6 +741,9 @@
     }
 
     updateFilterUI();
+    if (Object.keys(initialGamesByDate).length > 0) {
+        renderGames(initialGamesByDate);
+    }
 })();
 </script>
 @endpush

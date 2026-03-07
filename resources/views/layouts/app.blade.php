@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'AIU Sports Day') — AIU Sports Day</title>
+    <title>@yield('title', 'AIU Scoreboard') — AIU Scoreboard</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
         <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex items-center justify-between gap-4">
                 {{-- Logo --}}
                 <a href="{{ route('home') }}" class="shrink-0">
-                    <img src="{{ asset('sc-white.png') }}" alt="AIU Sports Day" class="h-5 w-auto">
+                    <img src="{{ asset('sc-white.png') }}" alt="AIU Scoreboard" class="h-5 w-auto">
                 </a>
 
                 {{-- Copyright --}}

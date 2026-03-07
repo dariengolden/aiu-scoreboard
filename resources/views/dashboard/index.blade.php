@@ -57,9 +57,32 @@
 </div>
 @endif
 
+{{-- Sport filters --}}
+@if($sports->isNotEmpty())
+<div class="mb-8">
+    <div class="bg-[#020617]/60 border border-white/10 rounded-2xl px-4 py-3">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Filter by sport</p>
+        <div class="flex flex-wrap gap-2">
+            <button type="button"
+                    data-sport-filter="all"
+                    class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-blue-600 text-white shadow-sm shadow-blue-500/30">
+                All sports
+            </button>
+            @foreach($sports as $sport)
+            <button type="button"
+                    data-sport-filter="{{ $sport->slug }}"
+                    class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-[#0f172a] text-slate-300 hover:bg-[#162033] hover:text-white border border-white/5">
+                {{ $sport->icon }} {{ $sport->name }}
+            </button>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- All games by sport --}}
 @foreach($sports as $sport)
-<div class="mb-8">
+<div class="mb-8" data-sport-section="{{ $sport->slug }}">
     <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
         <span>{{ $sport->icon }}</span> {{ $sport->name }}
     </h2>
@@ -101,5 +124,41 @@
     @endforeach
 </div>
 @endforeach
+
+{{-- Simple client-side sport filter --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const buttons = document.querySelectorAll('[data-sport-filter]');
+    const sections = document.querySelectorAll('[data-sport-section]');
+
+    if (!buttons.length || !sections.length) return;
+
+    function applySportFilter(slug) {
+        sections.forEach(section => {
+            const sectionSlug = section.getAttribute('data-sport-section');
+            const shouldShow = slug === 'all' || sectionSlug === slug;
+            section.classList.toggle('hidden', !shouldShow);
+        });
+
+        buttons.forEach(button => {
+            const isActive = button.getAttribute('data-sport-filter') === slug;
+            button.classList.toggle('bg-blue-600', isActive);
+            button.classList.toggle('text-white', isActive);
+            button.classList.toggle('bg-[#0f172a]', !isActive && button.getAttribute('data-sport-filter') !== 'all');
+            button.classList.toggle('text-slate-300', !isActive && button.getAttribute('data-sport-filter') !== 'all');
+        });
+    }
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            const slug = this.getAttribute('data-sport-filter');
+            applySportFilter(slug);
+        });
+    });
+
+    // Default to showing all sports
+    applySportFilter('all');
+});
+</script>
 
 @endsection
