@@ -23,6 +23,11 @@ class SportController extends Controller
 
         $categories = $sport->categories()->get();
 
+        if (! $selectedCategory) {
+            $menCategory = $categories->first(fn ($c) => stripos($c->name, 'Men') !== false);
+            $selectedCategory = $menCategory?->slug;
+        }
+
         $gamesQuery = Game::with(['teamHome', 'teamAway', 'winner', 'category'])
             ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
             ->orderBy('match_number');
@@ -37,7 +42,18 @@ class SportController extends Controller
             ? $categories->where('slug', $selectedCategory)
             : $categories;
 
-        $teams = Team::orderBy('name')->get()->keyBy('id');
+        $teamIds = collect();
+        foreach ($visibleCategories as $category) {
+            $categoryGames = $games[$category->id] ?? collect();
+            foreach ($categoryGames as $game) {
+                $teamIds->push($game->team_home_id);
+                $teamIds->push($game->team_away_id);
+            }
+        }
+        $teamIds = $teamIds->unique()->filter();
+        $teams = $teamIds->isNotEmpty()
+            ? Team::whereIn('id', $teamIds)->orderBy('name')->get()->keyBy('id')
+            : collect();
 
         $standingsByCategory = [];
         foreach ($visibleCategories as $category) {

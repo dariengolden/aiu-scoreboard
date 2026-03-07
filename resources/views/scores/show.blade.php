@@ -24,14 +24,10 @@
 
     {{-- Category filter --}}
     @if($categories->count() > 1)
-    <div class="flex flex-wrap items-center gap-2 mb-8">
-        <a href="{{ route('scores.show', $sport) }}"
-           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {{ !$selectedCategory ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white' }}">
-            All
-        </a>
+    <div class="flex flex-wrap items-center gap-2 mb-8" id="category-filters">
         @foreach($categories as $cat)
         <a href="{{ route('scores.show', ['sport' => $sport, 'category' => $cat->slug]) }}"
-           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {{ $selectedCategory === $cat->slug ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white' }}">
+           class="category-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all {{ $selectedCategory === $cat->slug ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white' }}">
             {{ $cat->name }}
         </a>
         @endforeach
@@ -125,17 +121,29 @@
     </div>
 </div>
 
+{{-- Category filter loading state --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.category-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>';
+            this.classList.add('opacity-75', 'pointer-events-none');
+        });
+    });
+});
+</script>
+
 {{-- Live polling script --}}
 @php
     $allGames = $visibleCategories->flatMap(fn ($cat) => $games[$cat->id] ?? []);
     $liveGameIds = $allGames->where('status', 'in_progress')->pluck('id')->toArray();
-    $allGameIds = $allGames->pluck('id')->toArray();
 @endphp
 
-@if(count($allGameIds) > 0)
+@if(count($liveGameIds) > 0)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const allGameIds = @json($allGameIds);
+    const liveGameIds = @json($liveGameIds);
     let pollingInterval = null;
     let lastData = {};
 
@@ -147,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function poll() {
         try {
             const response = await axios.get('/api/games/batch', {
-                params: { ids: allGameIds.join(',') }
+                params: { ids: liveGameIds.join(',') }
             });
 
             const data = response.data;

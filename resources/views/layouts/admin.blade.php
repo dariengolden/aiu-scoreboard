@@ -22,7 +22,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 </a>
                 <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-8 w-8 rounded">
-                <span class="text-lg font-bold text-white">AIU <span class="text-blue-400">Admin</span></span>
+                <span class="text-lg font-bold text-white">Scoreboard <span class="text-blue-400">Admin</span></span>
             </div>
 
             <div class="flex items-center gap-3">

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 // ── Public routes ────────────────────────────────────────────────────────────
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
+Route::get('/api/schedule', [ScheduleController::class, 'api'])->name('schedule.api');
 // Route::get('/results', [ResultController::class, 'index'])->name('results');
 Route::get('/scores', [SportController::class, 'index'])->name('scores.index');
 Route::get('/scores/{sport}', [SportController::class, 'show'])->name('scores.show');
