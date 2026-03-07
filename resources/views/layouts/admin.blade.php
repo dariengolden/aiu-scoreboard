@@ -18,9 +18,6 @@
     <header class="sticky top-0 z-50 bg-[#0c1445]/95 backdrop-blur border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <a href="{{ route('home') }}" class="text-slate-400 hover:text-white transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                </a>
                 <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-8 w-8 rounded">
                 <span class="text-lg font-bold text-white">Scoreboard <span class="text-blue-400">Admin</span></span>
             </div>
@@ -29,13 +26,17 @@
                 <span class="hidden sm:block text-sm text-slate-400">{{ auth()->user()->name }}</span>
                 @if(auth()->user()->isAdmin())
                 <a href="{{ route('admin.users.index') }}"
-                   class="text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
                     Users
                 </a>
                 @endif
                 <a href="{{ route('dashboard') }}"
-                   class="text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
-                    Games
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                     Dashboard
+                </a>
+                <a href="{{ route('home') }}"
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors text-slate-300 hover:bg-white/10">
+                    Public View
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -76,7 +77,7 @@
             <a href="{{ route('dashboard') }}"
                class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('dashboard') ? 'text-blue-400' : 'text-slate-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-                Games
+                 Dashboard
             </a>
             @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.users.index') }}"

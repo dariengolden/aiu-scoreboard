@@ -86,14 +86,14 @@
 
     {{-- Footer --}}
     <footer class="mt-6 md:mt-16 bg-[#060b18] border-t border-white/10">
-        <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex flex-wrap items-center justify-between gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex items-center justify-between gap-4">
                 {{-- Logo --}}
                 <a href="{{ route('home') }}" class="shrink-0">
                     <img src="{{ asset('sc-white.png') }}" alt="AIU Sports Day" class="h-5 w-auto">
                 </a>
 
                 {{-- Copyright --}}
-                <p class="text-xs md:text-sm text-slate-500">&copy; {{ date('Y') }} AIU Student Council. All rights reserved.</p>
+                <p class="text-xs text-slate-500 min-w-0 truncate">&copy; {{ date('Y') }} AIU Student Council. All rights reserved.</p>
 
                 {{-- Social links --}}
                 <div class="flex items-center gap-4">

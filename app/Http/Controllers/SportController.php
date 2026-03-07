@@ -28,7 +28,18 @@ class SportController extends Controller
             $selectedCategory = $menCategory?->slug;
         }
 
-        $gamesQuery = Game::with(['teamHome', 'teamAway', 'winner', 'category'])
+        $gamesQuery = Game::select([
+                'id',
+                'category_id',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'status',
+                'winner_id',
+                'match_number',
+            ])
+            ->with(['teamHome', 'teamAway', 'winner', 'category'])
             ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
             ->orderBy('match_number');
 

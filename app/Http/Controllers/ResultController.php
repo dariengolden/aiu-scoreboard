@@ -14,7 +14,18 @@ class ResultController extends Controller
         $sports = Sport::orderBy('order')->get();
         $selectedSport = $request->input('sport');
 
-        $query = Game::with(['category.sport', 'teamHome', 'teamAway', 'winner'])
+        $query = Game::select([
+                'id',
+                'category_id',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'status',
+                'winner_id',
+                'updated_at',
+            ])
+            ->with(['category.sport', 'teamHome', 'teamAway', 'winner'])
             ->where('status', 'completed');
 
         if ($selectedSport) {

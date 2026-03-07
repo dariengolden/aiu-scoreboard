@@ -23,9 +23,8 @@ class ScheduleController extends Controller
         $selectedStatuses = array_filter((array) $request->input('status', []));
         $selectedColors = array_filter((array) $request->input('color', []));
 
-        $cacheKey = 'schedule_'.md5(serialize($selectedSports).serialize($selectedStatuses).serialize($selectedColors));
-
-        $dateRange = cache()->remember($cacheKey.'_dates', 60, function () {
+        // Date range is global for all games; cache it independently of filters
+        $dateRange = cache()->remember('schedule_dates', 3600, function () {
             return Game::whereNotNull('scheduled_at')
                 ->selectRaw('MIN(scheduled_at) as first_date, MAX(scheduled_at) as last_date')
                 ->first();
@@ -42,7 +41,21 @@ class ScheduleController extends Controller
             $calendarEnd = $calendarStart->copy()->addDays(13)->endOfWeek(Carbon::SATURDAY);
         }
 
-        $query = Game::with(['category.sport', 'teamHome', 'teamAway'])
+        // Select only the columns needed for schedule display to avoid decoding large JSON fields
+        $query = Game::select([
+                'id',
+                'category_id',
+                'match_number',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'current_period',
+                'status',
+                'scheduled_at',
+                'location',
+            ])
+            ->with(['category.sport', 'teamHome', 'teamAway'])
             ->whereNotNull('scheduled_at')
             ->whereBetween('scheduled_at', [$calendarStart, $calendarEnd]);
 
@@ -69,6 +82,8 @@ class ScheduleController extends Controller
             });
         }
 
+        // Cache per-filter game lists for a short period to smooth out bursts of filter requests
+        $cacheKey = 'schedule_'.md5(serialize($selectedSports).serialize($selectedStatuses).serialize($selectedColors));
         $games = cache()->remember($cacheKey.'_games', 30, function () use ($query) {
             return $query->orderBy('scheduled_at')->get();
         });
@@ -105,7 +120,20 @@ class ScheduleController extends Controller
         $cacheKey = 'schedule_api_'.md5(serialize($selectedSports).serialize($selectedStatuses).serialize($selectedColors).$start.$end);
 
         $games = cache()->remember($cacheKey, 30, function () use ($selectedSports, $selectedStatuses, $selectedColors, $start, $end) {
-            $query = Game::with(['category.sport', 'teamHome', 'teamAway'])
+            $query = Game::select([
+                    'id',
+                    'category_id',
+                    'match_number',
+                    'team_home_id',
+                    'team_away_id',
+                    'score_home',
+                    'score_away',
+                    'current_period',
+                    'status',
+                    'scheduled_at',
+                    'location',
+                ])
+                ->with(['category.sport', 'teamHome', 'teamAway'])
                 ->whereNotNull('scheduled_at');
 
             if ($start && $end) {

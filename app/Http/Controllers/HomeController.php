@@ -9,11 +9,33 @@ class HomeController extends Controller
 {
     public function index(): View
     {
-        $liveGames = Game::where('status', 'in_progress')
+        $liveGames = Game::select([
+                'id',
+                'category_id',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'status',
+                'scheduled_at',
+                'location',
+            ])
+            ->where('status', 'in_progress')
             ->with(['category.sport', 'teamHome', 'teamAway'])
             ->get();
 
-        $upcomingGames = Game::where('status', 'upcoming')
+        $upcomingGames = Game::select([
+                'id',
+                'category_id',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'status',
+                'scheduled_at',
+                'location',
+            ])
+            ->where('status', 'upcoming')
             ->whereNotNull('scheduled_at')
             ->with(['category.sport', 'teamHome', 'teamAway'])
             ->orderBy('scheduled_at')
