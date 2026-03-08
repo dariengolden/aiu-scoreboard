@@ -17,6 +17,7 @@ class GameResource extends JsonResource
             // preformatted time string so the client can display times without
             // introducing timezone shifts.
             'scheduledAt' => $this->scheduled_at,
+            'scheduledEndAt' => $this->scheduled_end_at,
             'scheduledTime' => $this->scheduled_at?->format('g:ia'),
             'location' => $this->location,
             'scoreHome' => $this->score_home,
@@ -37,6 +38,8 @@ class GameResource extends JsonResource
                 'name' => $this->teamAway->name,
                 'colorHex' => $this->teamAway->color_hex,
             ],
+            'eventType' => $this->event_type,
+            'eventTitle' => $this->event_title,
         ];
     }
 }

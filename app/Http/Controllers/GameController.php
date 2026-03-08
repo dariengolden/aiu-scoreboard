@@ -55,24 +55,35 @@ class GameController extends Controller
 
     public function update(Request $request, Game $game): RedirectResponse
     {
-        $validated = $request->validate([
-            'score_home' => ['nullable', 'integer', 'min:0'],
-            'score_away' => ['nullable', 'integer', 'min:0'],
+        $rules = [
             'status' => ['required', 'in:upcoming,in_progress,completed'],
             'scheduled_at' => ['nullable', 'date'],
+            'scheduled_end_at' => ['nullable', 'date', 'after_or_equal:scheduled_at'],
             'location' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+            'event_title' => ['nullable', 'string', 'max:100'],
+        ];
+        if (! $game->event_type) {
+            $rules['score_home'] = ['nullable', 'integer', 'min:0'];
+            $rules['score_away'] = ['nullable', 'integer', 'min:0'];
+        }
+        $validated = $request->validate($rules);
 
-        // Auto-determine winner from scores when completed
-        $validated['winner_id'] = null;
-        if ($validated['status'] === 'completed' && isset($validated['score_home']) && isset($validated['score_away'])) {
+        // For events, ignore score fields
+        if ($game->event_type) {
+            unset($validated['score_home'], $validated['score_away']);
+            $validated['winner_id'] = null;
+        } else {
+            // Auto-determine winner from scores when completed
+            $validated['winner_id'] = null;
+            if ($validated['status'] === 'completed' && isset($validated['score_home']) && isset($validated['score_away'])) {
             if ($validated['score_home'] > $validated['score_away']) {
                 $validated['winner_id'] = $game->team_home_id;
             } elseif ($validated['score_away'] > $validated['score_home']) {
                 $validated['winner_id'] = $game->team_away_id;
             }
             // Draw: winner_id stays null
+            }
         }
 
         $game->update($validated);
@@ -245,13 +256,17 @@ class GameController extends Controller
 
         $result = [];
         foreach ($games as $game) {
+            $currentPeriod = $game->current_period;
+            if (($game->game_data['halftime'] ?? false) && $game->sport_slug === 'basketball') {
+                $currentPeriod = 'Halftime';
+            }
             $result[$game->id] = [
                 'id' => $game->id,
                 'score_home' => $game->score_home,
                 'score_away' => $game->score_away,
                 'game_data' => $game->game_data,
                 'game_format' => $game->game_format,
-                'current_period' => $game->current_period,
+                'current_period' => $currentPeriod,
                 'status' => $game->status,
                 'status_label' => $game->status_label,
                 'winner_id' => $game->winner_id,

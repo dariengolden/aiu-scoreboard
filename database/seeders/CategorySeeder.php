@@ -30,6 +30,7 @@ class CategorySeeder extends Seeder
                 'Women\'s Doubles',
                 'Mixed Doubles',
             ],
+            'Events' => ['Ceremonies'],
             'Running' => [
                 '100m Men',
                 '100m Women',

@@ -5,7 +5,8 @@
 @section('content')
 
 @php
-    $sportSlug = $game->category->sport->slug;
+    $isEvent = !empty($game->event_type);
+    $sportSlug = $game->category->sport->slug ?? null;
     $sportConfig = $game->sport_config;
     $sportType = $sportConfig['type'] ?? 'simple';
     $gameData = $game->game_data ?? [];
@@ -21,25 +22,94 @@
 <div class="flex items-center gap-2 text-sm text-slate-400 mb-6 flex-wrap">
     <a href="{{ route('dashboard') }}" class="hover:text-white transition-colors">Dashboard</a>
     <span>/</span>
-    <span class="text-white font-medium">Live Scoring</span>
+    <span class="text-white font-medium">{{ $isEvent ? 'Event' : 'Live Scoring' }}</span>
 </div>
 
-{{-- Game header --}}
+{{-- Game/Event header --}}
 <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 mb-6">
     <div class="flex items-center gap-3 mb-3">
-        <span class="text-3xl">{{ $game->category->sport->icon }}</span>
+        <span class="text-3xl">{{ $game->category->sport->icon ?? '🎉' }}</span>
         <div>
-            <h1 class="text-lg font-black text-white">{{ $game->category->sport->name }} &middot; {{ $game->category->name }}</h1>
+            <h1 class="text-lg font-black text-white">
+                @if($isEvent)
+                    {{ $game->event_title ?? 'Event' }}
+                @else
+                    {{ $game->category->sport->name }} &middot; {{ $game->category->name }}
+                @endif
+            </h1>
             <p class="text-sm text-blue-400 font-semibold">{{ $game->match_label }}</p>
         </div>
     </div>
+    @if(!$isEvent)
     <div class="flex items-center gap-3">
         <x-team-badge :team="$game->teamHome" />
         <span class="text-slate-500 text-sm font-bold">vs</span>
         <x-team-badge :team="$game->teamAway" />
     </div>
+    @endif
 </div>
 
+@if($isEvent)
+{{-- Event: schedule only, no scoring --}}
+<form method="POST" action="{{ route('games.update', $game) }}" class="space-y-5">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="score_home" value="">
+    <input type="hidden" name="score_away" value="">
+    {{-- Status selector --}}
+    <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 space-y-4">
+        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Event Status</h2>
+        <div class="grid grid-cols-3 gap-2" id="event-status-selector">
+            @foreach(['upcoming' => 'Upcoming', 'in_progress' => 'Live', 'completed' => 'Completed'] as $val => $label)
+            <label class="block cursor-pointer">
+                <input type="radio" name="status" value="{{ $val }}" {{ $game->status === $val ? 'checked' : '' }}
+                       class="peer sr-only">
+                <span class="block w-full text-center py-3 rounded-xl text-xs font-bold border-2 transition-colors border-white/10 text-slate-400 hover:border-white/20 peer-checked:border-blue-500 peer-checked:bg-blue-500/20 peer-checked:text-blue-300">
+                    @if($val === 'in_progress')<span class="w-2 h-2 rounded-full bg-green-400 inline-block mr-1 animate-pulse"></span>@endif
+                    {{ $label }}
+                </span>
+            </label>
+            @endforeach
+        </div>
+    </div>
+    <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 space-y-4">
+        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Event Details</h2>
+        <div>
+            <label for="event_title" class="block text-xs font-semibold text-slate-400 mb-2">Event Title</label>
+            <input type="text" id="event_title" name="event_title"
+                   value="{{ old('event_title', $game->event_title) }}"
+                   class="w-full bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+            <label for="scheduled_at" class="block text-xs font-semibold text-slate-400 mb-2">Start Time</label>
+            <input type="datetime-local" id="scheduled_at" name="scheduled_at"
+                   value="{{ old('scheduled_at', $game->scheduled_at?->format('Y-m-d\TH:i')) }}"
+                   class="w-full bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]">
+        </div>
+        <div>
+            <label for="scheduled_end_at" class="block text-xs font-semibold text-slate-400 mb-2">End Time</label>
+            <input type="datetime-local" id="scheduled_end_at" name="scheduled_end_at"
+                   value="{{ old('scheduled_end_at', $game->scheduled_end_at?->format('Y-m-d\TH:i')) }}"
+                   class="w-full bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]">
+        </div>
+        <div>
+            <label for="location" class="block text-xs font-semibold text-slate-400 mb-2">Location</label>
+            <input type="text" id="location" name="location"
+                   value="{{ old('location', $game->location) }}"
+                   class="w-full bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
+                   placeholder="e.g. Main Arena">
+        </div>
+    </div>
+    <div class="flex items-center gap-3 pb-4">
+        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-4 rounded-xl transition-colors text-sm">
+            Save & Return
+        </button>
+        <a href="{{ route('dashboard') }}" class="flex-1 bg-[#1e293b] hover:bg-[#243044] text-slate-300 font-bold py-4 rounded-xl transition-colors text-sm text-center border border-white/10">
+            Back to Dashboard
+        </a>
+    </div>
+</form>
+@else
 {{-- Live scoring app (all managed by JS) --}}
 <div id="live-scoring-app"
      data-game-id="{{ $game->id }}"
@@ -64,7 +134,8 @@
      data-team-away-color="{{ $game->teamAway->color_hex }}"
      data-update-url="{{ route('games.live-update', $game) }}"
      data-csrf-token="{{ csrf_token() }}"
-     data-notes="{{ $game->notes ?? '' }}">
+     data-notes="{{ $game->notes ?? '' }}"
+     data-is-basketball="{{ $sportSlug === 'basketball' ? '1' : '0' }}">
 
     {{-- Single toast indicator --}}
     <div id="toast-indicator" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
@@ -159,9 +230,27 @@
         </h2>
 
         {{-- Period tabs --}}
-        <div class="flex gap-1.5 mb-4 flex-wrap" id="period-tabs">
-            {{-- Generated by JS --}}
+        <div class="flex gap-1.5 mb-4 flex-wrap items-center" id="period-tabs-row">
+            <div class="flex gap-1.5 flex-wrap" id="period-tabs">
+                {{-- Generated by JS --}}
+            </div>
+            @if($sportSlug === 'basketball')
+            <button type="button" id="add-ot-btn" class="ml-2 px-3 py-2 rounded-xl text-xs font-bold border-2 border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors">
+                + Add OT
+            </button>
+            @endif
         </div>
+
+        {{-- Halftime selector (basketball only) --}}
+        @if($sportSlug === 'basketball')
+        <div class="mb-4 flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="halftime-checkbox" {{ ($gameData['halftime'] ?? false) ? 'checked' : '' }}
+                       class="rounded bg-[#0f172a] border-white/20 text-amber-500 focus:ring-amber-500/50">
+                <span class="text-xs font-semibold text-slate-300">Halftime</span>
+            </label>
+        </div>
+        @endif
 
         {{-- Active period scoring --}}
         <div id="active-period-scoring" class="grid grid-cols-2 gap-4">
@@ -556,6 +645,7 @@
     let currentPeriod = app.dataset.currentPeriod || '';
     let maxPeriods = parseInt(app.dataset.maxPeriods) || 1;
     let periodLabels = JSON.parse(app.dataset.periodLabels || '[]');
+    const isBasketball = app.dataset.isBasketball === '1';
     let increments = JSON.parse(app.dataset.increments || '[1]');
     let incrementLabels = JSON.parse(app.dataset.incrementLabels || '["+1"]');
     let formats = JSON.parse(app.dataset.formats || 'null');
@@ -570,6 +660,17 @@
         activePeriodIndex = gameData.current_set ?? 0;
     } else if (config.sportType === 'quarters' || config.sportType === 'halves') {
         activePeriodIndex = gameData.current_period ?? 0;
+        // Basketball: sync maxPeriods and periodLabels from game_data if we have OT
+        if (isBasketball) {
+            const periods = gameData.periods || [];
+            if (periods.length > 4) {
+                maxPeriods = periods.length;
+                periodLabels = ['Q1', 'Q2', 'Q3', 'Q4'];
+                for (let i = 1; i <= periods.length - 4; i++) {
+                    periodLabels.push('OT' + i);
+                }
+            }
+        }
     }
 
     // ── DOM refs ─────────────────────────────────────────────────────────
@@ -615,9 +716,15 @@
     }
 
     function updateCurrentPeriodLabel() {
-        const label = periodLabels[activePeriodIndex] || '';
-        currentPeriod = label;
-        if (periodDisplay) periodDisplay.textContent = label;
+        // Halftime overrides period label for basketball
+        if (isBasketball && (gameData.halftime || false)) {
+            currentPeriod = 'Halftime';
+            if (periodDisplay) periodDisplay.textContent = 'Halftime';
+        } else {
+            const label = periodLabels[activePeriodIndex] || '';
+            currentPeriod = label;
+            if (periodDisplay) periodDisplay.textContent = label;
+        }
 
         // Update game_data current tracker
         if (config.sportType === 'sets') {
@@ -786,6 +893,48 @@
                 switchPeriod(activePeriodIndex + 1);
             }
         }
+    }
+
+    // ── Add OT button (basketball) ───────────────────────────────────────
+    const addOtBtn = document.getElementById('add-ot-btn');
+    if (addOtBtn && isBasketball) {
+        addOtBtn.addEventListener('click', () => {
+            gameData.periods = gameData.periods || [];
+            while (gameData.periods.length < 4) {
+                gameData.periods.push({ home: 0, away: 0 });
+            }
+            const otCount = gameData.periods.length - 4;
+            if (otCount >= 5) return; // Max 5 OTs
+
+            gameData.periods.push({ home: 0, away: 0 });
+            maxPeriods = gameData.periods.length;
+            periodLabels = ['Q1', 'Q2', 'Q3', 'Q4'];
+            for (let i = 1; i <= gameData.periods.length - 4; i++) {
+                periodLabels.push('OT' + i);
+            }
+            renderPeriodTabs();
+            renderPeriodSummary();
+            updateAddOtButton();
+            scheduleSave();
+        });
+    }
+
+    function updateAddOtButton() {
+        if (!addOtBtn || !isBasketball) return;
+        const periods = gameData.periods || [];
+        const otCount = periods.length - 4;
+        addOtBtn.disabled = otCount >= 5;
+        addOtBtn.classList.toggle('opacity-50 cursor-not-allowed', otCount >= 5);
+    }
+
+    // ── Halftime checkbox (basketball) ────────────────────────────────────
+    const halftimeCheckbox = document.getElementById('halftime-checkbox');
+    if (halftimeCheckbox && isBasketball) {
+        halftimeCheckbox.addEventListener('change', () => {
+            gameData.halftime = halftimeCheckbox.checked;
+            updateCurrentPeriodLabel();
+            scheduleSave();
+        });
     }
 
     // ── Set action button (Complete Set / Update Set) ─────────────────────
@@ -1076,8 +1225,10 @@
         recalculateTotals();
         renderPeriodSummary();
         updateSetActionButton();
+        if (isBasketball) updateAddOtButton();
     }
 });
 </script>
+@endif
 
 @endsection

@@ -14,6 +14,7 @@
     $disciplineConfig = $config['discipline'] ?? null;
     $gameData = $game->game_data ?? [];
     $labels = $game->period_labels;
+    $isCeremony = !empty($game->event_type);
 
     $rows = [];
     if ($type === 'sets') {
@@ -88,6 +89,25 @@
     {{-- Main content --}}
     <div class="space-y-6">
 
+        @if($isCeremony)
+        {{-- Ceremony: event info only, no scores --}}
+        <div class="bg-[#1e293b] rounded-2xl border border-white/5 overflow-hidden">
+            <div class="px-6 py-8 text-center">
+                <h2 class="text-2xl font-black text-white mb-2">{{ $game->event_title ?? 'Ceremony' }}</h2>
+                @if($game->scheduled_at)
+                <p class="text-slate-400 text-sm">
+                    {{ $game->scheduled_at->format('l, F j, Y \a\t g:ia') }}
+                    @if($game->scheduled_end_at)
+                        – {{ $game->scheduled_end_at->format('g:ia') }}
+                    @endif
+                </p>
+                @endif
+                @if($game->location)
+                <p class="text-slate-400 text-sm mt-1">{{ $game->location }}</p>
+                @endif
+            </div>
+        </div>
+        @else
         {{-- Scoreboard --}}
         <div class="space-y-4">
             <div class="bg-[#1e293b] rounded-2xl border border-white/5 overflow-hidden">
@@ -170,10 +190,19 @@
             {{-- Period / Set breakdown (always show for live set-based games so polling can populate) --}}
             @if($showBreakdownSection)
                 <div class="bg-[#0f172a] rounded-2xl border border-white/5 overflow-hidden">
-                    <div class="px-4 py-3 border-b border-white/5">
+                    <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between gap-2">
                         <h2 class="text-sm font-bold text-white uppercase tracking-wider">
                             Game details
                         </h2>
+                        @php
+                            $formatLabel = null;
+                            if ($type === 'sets' && $config['formats'] ?? null) {
+                                $formatLabel = $config['formats'][$game->game_format ?? ''] ?? null;
+                            }
+                        @endphp
+                        @if($formatLabel)
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $formatLabel }}</span>
+                        @endif
                     </div>
                     <div class="px-4 py-4 space-y-4">
                         {{-- Discipline: cards only --}}
@@ -228,7 +257,7 @@
                             </div>
                         @endif
 
-                        {{-- Score breakdown --}}
+                        {{-- Score breakdown (edit-page table style) --}}
                         @if($hasBreakdown || ($game->isLive() && in_array($type, ['sets', 'quarters', 'halves'])))
                             <div class="{{ $disciplineConfig && $hasCardDisciplineData ? 'pt-4 border-t border-white/5' : '' }}">
                                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
@@ -242,44 +271,40 @@
                                         Score breakdown
                                     @endif
                                 </h3>
-                                <div id="game-breakdown-rows" class="space-y-2">
-                                    @foreach($rows as $i => $row)
-                                        @php
-                                            $home = $row['home'] ?? 0;
-                                            $away = $row['away'] ?? 0;
-                                            $label = $labels[$i] ?? 'Period '.($i + 1);
-                                            $homeIsAhead = $home > $away;
-                                            $awayIsAhead = $away > $home;
-                                        @endphp
-                                        @if($home > 0 || $away > 0)
-                                            <div class="px-3 py-2 rounded-xl bg-slate-900/60 border border-white/5">
-                                                <div class="flex items-center justify-between gap-2">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="px-2 py-0.5 rounded-full bg-white/5 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
-                                                            {{ $label }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="flex items-center gap-4 text-xs md:text-sm tabular-nums">
-                                                        <div class="flex items-center gap-1">
-                                                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $homeTeam->color_hex }}"></span>
-                                                            <span class="font-semibold {{ $homeIsAhead ? 'text-white' : 'text-slate-300' }}">
-                                                                {{ $home }}
-                                                            </span>
-                                                        </div>
-                                                        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                                                            vs
-                                                        </span>
-                                                        <div class="flex items-center gap-1">
-                                                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $awayTeam->color_hex }}"></span>
-                                                            <span class="font-semibold {{ $awayIsAhead ? 'text-white' : 'text-slate-300' }}">
-                                                                {{ $away }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endforeach
+                                <div id="game-breakdown-rows" class="overflow-x-auto">
+                                    <table class="w-full text-xs">
+                                        <thead>
+                                            <tr class="border-b border-white/5 text-slate-500 uppercase tracking-wider">
+                                                <th class="text-left py-2 pr-2">Team</th>
+                                                @foreach($rows as $i => $row)
+                                                    @if(($row['home'] ?? 0) > 0 || ($row['away'] ?? 0) > 0)
+                                                        <th class="text-center py-2 px-1">{{ $labels[$i] ?? 'P'.($i + 1) }}</th>
+                                                    @endif
+                                                @endforeach
+                                                <th class="text-center py-2 pl-2 font-bold text-white">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="border-b border-white/5">
+                                                <td class="py-2 pr-2"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background-color:{{ $homeTeam->color_hex }}"></span><span class="font-semibold text-white">{{ $homeTeam->name }}</span></span></td>
+                                                @foreach($rows as $i => $row)
+                                                    @if(($row['home'] ?? 0) > 0 || ($row['away'] ?? 0) > 0)
+                                                        <td class="text-center py-2 px-1 font-bold tabular-nums text-slate-300">{{ $row['home'] ?? 0 }}</td>
+                                                    @endif
+                                                @endforeach
+                                                <td class="text-center py-2 pl-2 font-black text-white tabular-nums text-sm">{{ $game->score_home ?? 0 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2 pr-2"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background-color:{{ $awayTeam->color_hex }}"></span><span class="font-semibold text-white">{{ $awayTeam->name }}</span></span></td>
+                                                @foreach($rows as $i => $row)
+                                                    @if(($row['home'] ?? 0) > 0 || ($row['away'] ?? 0) > 0)
+                                                        <td class="text-center py-2 px-1 font-bold tabular-nums text-slate-300">{{ $row['away'] ?? 0 }}</td>
+                                                    @endif
+                                                @endforeach
+                                                <td class="text-center py-2 pl-2 font-black text-white tabular-nums text-sm">{{ $game->score_away ?? 0 }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         @endif
@@ -287,10 +312,11 @@
                 </div>
             @endif
         </div>
+        @endif
     </div>
 </div>
 
-@if($game->isLive())
+@if($game->isLive() && !$isCeremony)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('[data-game-id]');
@@ -349,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Update breakdown - same logic as home/scores (sets or periods with scores)
+            // Update breakdown - edit-page table style
             const breakdownRows = document.getElementById('game-breakdown-rows');
             if (breakdownRows && game.game_data) {
                 const isSets = !!game.game_data.sets;
@@ -357,34 +383,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const items = game.game_data[dataKey] || [];
                 const itemsWithScores = items.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
 
-                let html = '';
+                let html = '<table class="w-full text-xs"><thead><tr class="border-b border-white/5 text-slate-500 uppercase tracking-wider">';
+                html += '<th class="text-left py-2 pr-2">Team</th>';
                 itemsWithScores.forEach((item, i) => {
-                    const home = item.home || 0;
-                    const away = item.away || 0;
-                    const label = periodLabels[i] || 'Period ' + (i + 1);
-                    const homeIsAhead = home > away;
-                    const awayIsAhead = away > home;
-                    html += `
-                        <div class="px-3 py-2 rounded-xl bg-slate-900/60 border border-white/5">
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2 py-0.5 rounded-full bg-white/5 text-[11px] font-semibold uppercase tracking-wider text-slate-300">${label}</span>
-                                </div>
-                                <div class="flex items-center gap-4 text-xs md:text-sm tabular-nums">
-                                    <div class="flex items-center gap-1">
-                                        <span class="w-2.5 h-2.5 rounded-full" style="background-color:${homeColor}"></span>
-                                        <span class="font-semibold ${homeIsAhead ? 'text-white' : 'text-slate-300'}">${home}</span>
-                                    </div>
-                                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">vs</span>
-                                    <div class="flex items-center gap-1">
-                                        <span class="w-2.5 h-2.5 rounded-full" style="background-color:${awayColor}"></span>
-                                        <span class="font-semibold ${awayIsAhead ? 'text-white' : 'text-slate-300'}">${away}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    html += `<th class="text-center py-2 px-1">${periodLabels[i] || 'P' + (i + 1)}</th>`;
                 });
+                html += '<th class="text-center py-2 pl-2 font-bold text-white">Total</th></tr></thead><tbody>';
+                html += `<tr class="border-b border-white/5"><td class="py-2 pr-2"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background-color:${homeColor}"></span><span class="font-semibold text-white">${homeName}</span></span></td>`;
+                itemsWithScores.forEach(item => {
+                    html += `<td class="text-center py-2 px-1 font-bold tabular-nums text-slate-300">${item.home || 0}</td>`;
+                });
+                html += `<td class="text-center py-2 pl-2 font-black text-white tabular-nums text-sm">${game.score_home ?? 0}</td></tr>`;
+                html += `<tr><td class="py-2 pr-2"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background-color:${awayColor}"></span><span class="font-semibold text-white">${awayName}</span></span></td>`;
+                itemsWithScores.forEach(item => {
+                    html += `<td class="text-center py-2 px-1 font-bold tabular-nums text-slate-300">${item.away || 0}</td>`;
+                });
+                html += `<td class="text-center py-2 pl-2 font-black text-white tabular-nums text-sm">${game.score_away ?? 0}</td></tr>`;
+                html += '</tbody></table>';
                 breakdownRows.innerHTML = html;
             }
         } catch (err) {

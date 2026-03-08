@@ -19,13 +19,17 @@ class Game extends Model
         'current_period',
         'status',
         'scheduled_at',
+        'scheduled_end_at',
         'location',
         'notes',
         'winner_id',
+        'event_type',
+        'event_title',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'scheduled_end_at' => 'datetime',
         'score_home' => 'integer',
         'score_away' => 'integer',
         'match_number' => 'integer',
@@ -197,6 +201,7 @@ class Game extends Model
 
     /**
      * Get period labels for this game.
+     * For basketball: base Q1-Q4, then OT1-OT5 if overtime periods exist.
      */
     public function getPeriodLabelsAttribute(): array
     {
@@ -205,19 +210,50 @@ class Game extends Model
             return [];
         }
 
-        if ($config['period_labels']) {
-            return $config['period_labels'];
+        $baseLabels = $config['period_labels'];
+        if ($baseLabels === null) {
+            // Generate set labels
+            $max = $this->max_periods;
+            $type = $config['type'];
+            $label = match ($type) {
+                'sets' => 'Set',
+                default => 'Period',
+            };
+
+            return array_map(fn ($i) => "$label ".($i + 1), range(0, $max - 1));
         }
 
-        // Generate set labels
-        $max = $this->max_periods;
-        $type = $config['type'];
-        $label = match ($type) {
-            'sets' => 'Set',
-            default => 'Period',
-        };
+        // Basketball: extend with OT periods from game_data if present
+        if ($config['type'] === 'quarters') {
+            $periods = $this->game_data['periods'] ?? [];
+            $otCount = max(0, count($periods) - 4);
 
-        return array_map(fn ($i) => "$label ".($i + 1), range(0, $max - 1));
+            if ($otCount > 0) {
+                $labels = $baseLabels;
+                for ($i = 1; $i <= min(5, $otCount); $i++) {
+                    $labels[] = "OT$i";
+                }
+
+                return $labels;
+            }
+        }
+
+        return $baseLabels;
+    }
+
+    /**
+     * Get max periods including possible OT (for basketball: 4 + up to 5 OT = 9).
+     */
+    public function getMaxPeriodsIncludingOTAttribute(): int
+    {
+        if ($this->sport_slug === 'basketball') {
+            $periods = $this->game_data['periods'] ?? [];
+            $currentCount = count($periods);
+
+            return max(4, min(9, $currentCount > 0 ? $currentCount : 4));
+        }
+
+        return $this->max_periods;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -230,6 +266,40 @@ class Game extends Model
     public function isLive(): bool
     {
         return $this->status === 'in_progress';
+    }
+
+    /**
+     * Whether this game is an event (ceremony, etc.) — no scores.
+     */
+    public function isEvent(): bool
+    {
+        return ! empty($this->event_type);
+    }
+
+    /**
+     * Whether an event is currently "live" (within its scheduled time window).
+     */
+    public function isEventLiveNow(): bool
+    {
+        if (! $this->isEvent() || ! $this->scheduled_at || ! $this->scheduled_end_at) {
+            return false;
+        }
+
+        $now = now();
+
+        return $now->gte($this->scheduled_at) && $now->lte($this->scheduled_end_at);
+    }
+
+    /**
+     * Whether this should appear as "live" (regular game in_progress, or event within its time window).
+     */
+    public function isLiveOrEventLive(): bool
+    {
+        if ($this->isEvent()) {
+            return $this->isEventLiveNow();
+        }
+
+        return $this->isLive();
     }
 
     /**

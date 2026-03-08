@@ -207,24 +207,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.classList.remove('border-green-500/20');
                 }
 
-                // Update period/set breakdown - show all sets/periods with scores
+                // Update period/set breakdown - compact badges
                 const breakdownEl = card.querySelector('.game-card-breakdown');
                 if (game.game_data) {
                     const isSets = !!game.game_data.sets;
                     const dataKey = isSets ? 'sets' : 'periods';
                     const items = game.game_data[dataKey] || [];
-                    
-                    // For sets, show all sets that have scores
-                    // For periods, show all periods with scores
                     const itemsWithScores = items.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
-                    
+
                     if (itemsWithScores.length > 0) {
                         let html = '<div class="flex items-center gap-1.5 text-xs tabular-nums">';
                         itemsWithScores.forEach(item => {
                             html += `<span class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium">${item.home || 0}-${item.away || 0}</span>`;
                         });
                         html += '</div>';
-
                         if (breakdownEl) {
                             breakdownEl.innerHTML = html;
                         } else {

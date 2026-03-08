@@ -54,6 +54,8 @@ class ScheduleController extends Controller
                 'status',
                 'scheduled_at',
                 'location',
+                'event_type',
+                'event_title',
             ])
             ->with(['category.sport', 'teamHome', 'teamAway'])
             ->whereNotNull('scheduled_at')
@@ -85,7 +87,9 @@ class ScheduleController extends Controller
         // Cache per-filter game lists for a short period to smooth out bursts of filter requests
         $cacheKey = 'schedule_'.md5(serialize($selectedSports).serialize($selectedStatuses).serialize($selectedColors));
         $games = cache()->remember($cacheKey.'_games', 30, function () use ($query) {
-            return $query->orderBy('scheduled_at')->get();
+            return $query->orderByRaw("CASE WHEN event_type IS NOT NULL THEN 0 ELSE 1 END")
+                ->orderBy('scheduled_at')
+                ->get();
         });
 
         $gamesByDate = $games->groupBy(fn ($game) => $game->scheduled_at->format('Y-m-d'));
@@ -136,6 +140,8 @@ class ScheduleController extends Controller
                     'status',
                     'scheduled_at',
                     'location',
+                    'event_type',
+                    'event_title',
                 ])
                 ->with(['category.sport', 'teamHome', 'teamAway'])
                 ->whereNotNull('scheduled_at');
@@ -170,7 +176,9 @@ class ScheduleController extends Controller
                 });
             }
 
-            return $query->orderBy('scheduled_at')->get();
+            return $query->orderByRaw("CASE WHEN event_type IS NOT NULL THEN 0 ELSE 1 END")
+                ->orderBy('scheduled_at')
+                ->get();
         });
 
         $gamesByDate = $games->groupBy(fn ($game) => $game->scheduled_at->format('Y-m-d'));

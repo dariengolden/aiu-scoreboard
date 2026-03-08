@@ -13,7 +13,7 @@ class SportController extends Controller
     public function index(): View
     {
         $sports = cache()->remember('scores_sports_with_categories', 600, function () {
-            return Sport::orderBy('order')->with('categories')->get();
+            return Sport::orderBy('order')->with('categories')->where('slug', '!=', 'events')->get();
         });
 
         return view('scores.index', compact('sports'));
@@ -21,6 +21,10 @@ class SportController extends Controller
 
     public function show(Request $request, Sport $sport): View
     {
+        if ($sport->slug === 'events') {
+            abort(404);
+        }
+
         $selectedCategory = $request->query('category');
 
         $categories = $sport->categories()->get();
@@ -45,6 +49,7 @@ class SportController extends Controller
                     'match_number',
                 ])
                 ->with(['teamHome', 'teamAway', 'winner', 'category'])
+                ->whereNull('event_type')
                 ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
                 ->orderBy('match_number');
 

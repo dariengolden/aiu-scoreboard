@@ -33,6 +33,21 @@
 </section>
 @endif
 
+{{-- Recent results (last 24 hours) --}}
+@if($recentResults->isNotEmpty())
+<section class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-white">Recent Results <span class="text-slate-500 font-normal text-sm">(last 24 hours)</span></h2>
+        <a href="{{ route('schedule') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach($recentResults as $game)
+        <x-game-card :game="$game" />
+        @endforeach
+    </div>
+</section>
+@endif
+
 {{-- Upcoming games --}}
 @if($upcomingGames->isNotEmpty())
 <section class="max-w-7xl mx-auto px-4 py-4">
@@ -42,27 +57,7 @@
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($upcomingGames as $game)
-        <div class="bg-[#1e293b] rounded-2xl p-4 border border-white/5">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <p class="text-xs text-slate-400 font-medium">{{ $game->category->sport->name }} &mdash; {{ $game->category->name }}</p>
-                    <p class="text-xs text-blue-400 mt-0.5">{{ $game->match_label }}</p>
-                </div>
-                <x-status-badge :status="$game->status" />
-            </div>
-            <div class="flex items-center gap-2">
-                <x-team-badge :team="$game->teamHome" size="sm" />
-                <span class="text-slate-500 text-xs font-medium">vs</span>
-                <x-team-badge :team="$game->teamAway" size="sm" />
-            </div>
-            @if($game->scheduled_at)
-            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                {{ $game->scheduled_at->format('D, M j · g:ia') }}
-                @if($game->location) &middot; {{ $game->location }}@endif
-            </p>
-            @endif
-        </div>
+        <x-game-card :game="$game" />
         @endforeach
     </div>
 </section>
@@ -103,17 +98,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     periodEl.textContent = game.current_period;
                 }
 
-                // Update breakdown - show all sets/periods with scores
+                // Update breakdown - compact badges
                 const breakdownEl = card.querySelector('.game-card-breakdown');
                 if (game.game_data) {
                     const isSets = !!game.game_data.sets;
                     const dataKey = isSets ? 'sets' : 'periods';
                     const items = game.game_data[dataKey] || [];
-                    
-                    // For sets, show all sets that have scores
-                    // For periods, show all periods with scores
                     const itemsWithScores = items.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
-                    
+
                     if (itemsWithScores.length > 0) {
                         let html = '<div class="flex items-center gap-1.5 text-xs tabular-nums">';
                         itemsWithScores.forEach(item => {

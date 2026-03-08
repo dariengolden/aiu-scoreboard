@@ -66,6 +66,51 @@ class GameSeeder extends Seeder
         };
 
         // =====================================================================
+        // CEREMONY EVENTS (no scores, display-only)
+        // =====================================================================
+        $eventTeamId = $teams['Event'] ?? null;
+        if ($eventTeamId) {
+            $ceremonyCat = $cat('Events', 'Ceremonies');
+            if ($ceremonyCat) {
+                $opening = Game::firstOrCreate(
+                    [
+                        'category_id' => $ceremonyCat->id,
+                        'match_number' => 1,
+                    ],
+                    [
+                        'team_home_id' => $eventTeamId,
+                        'team_away_id' => $eventTeamId,
+                        'status' => 'upcoming',
+                        'scheduled_at' => $dt(8, '17:30'),
+                        'scheduled_end_at' => $dt(8, '19:30'),
+                        'location' => null,
+                        'event_type' => 'opening_ceremony',
+                        'event_title' => 'Opening Ceremony',
+                    ]
+                );
+                $opening->update(['scheduled_at' => $dt(8, '17:30'), 'scheduled_end_at' => $dt(8, '19:30')]);
+
+                $closing = Game::firstOrCreate(
+                    [
+                        'category_id' => $ceremonyCat->id,
+                        'match_number' => 2,
+                    ],
+                    [
+                        'team_home_id' => $eventTeamId,
+                        'team_away_id' => $eventTeamId,
+                        'status' => 'upcoming',
+                        'scheduled_at' => $dt(22, '15:00'),
+                        'scheduled_end_at' => $dt(22, '21:00'),
+                        'location' => null,
+                        'event_type' => 'closing_ceremony',
+                        'event_title' => 'Closing Ceremony',
+                    ]
+                );
+                $closing->update(['scheduled_at' => $dt(22, '15:00'), 'scheduled_end_at' => $dt(22, '21:00')]);
+            }
+        }
+
+        // =====================================================================
         // MARCH 8 (SUN) — Round Robin Day 1
         // =====================================================================
         $game('Basketball', 'Women', 'Red', 'Purple', 8, '19:30');

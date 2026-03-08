@@ -17,6 +17,7 @@ class SportSeeder extends Seeder
             ['name' => 'Table Tennis', 'slug' => 'table-tennis', 'icon' => '🏓', 'order' => 5],
             ['name' => 'Badminton',    'slug' => 'badminton',    'icon' => '🏸', 'order' => 6],
             ['name' => 'Running',      'slug' => 'running',      'icon' => '🏃', 'order' => 7],
+            ['name' => 'Events',      'slug' => 'events',       'icon' => '🎉', 'order' => 8],
         ];
 
         foreach ($sports as $sport) {

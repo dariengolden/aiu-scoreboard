@@ -264,7 +264,10 @@
                             default => 'border-l-slate-600 bg-white/[0.03]',
                         };
                     @endphp
-                    <div class="border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group cursor-default" title="{{ $game->category->sport->name }} {{ $game->category->name }} — {{ $game->teamHome->name }} vs {{ $game->teamAway->name }} @ {{ $game->scheduled_at->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
+                    @php
+                        $gameTitle = $game->event_title ?: $game->teamHome->name . ' vs ' . $game->teamAway->name;
+                    @endphp
+                    <div class="border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group cursor-default" title="{{ $game->category->sport->name }} {{ $game->category->name }} — {{ $gameTitle }} @ {{ $game->scheduled_at->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
                         <div class="flex items-center gap-1 min-w-0">
                             <span class="text-[11px] shrink-0">{{ $game->category->sport->icon }}</span>
                             <span class="text-[11px] text-slate-400 truncate leading-tight">
@@ -273,6 +276,9 @@
                             </span>
                         </div>
                         <div class="flex items-center gap-1 mt-0.5 min-w-0">
+                            @if($game->event_title)
+                            <span class="text-[10px] text-slate-300 truncate leading-tight font-medium">{{ $game->event_title }}</span>
+                            @else
                             <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamHome->color_hex }}"></span>
                             <span class="text-[10px] text-slate-400 truncate leading-tight">
                                 {{ $game->teamHome->name }}
@@ -280,6 +286,7 @@
                                 {{ $game->teamAway->name }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamAway->color_hex }}"></span>
+                            @endif
                         </div>
                     </div>
                     @endforeach
@@ -351,11 +358,15 @@
                                     <span class="text-xs text-slate-400 truncate">{{ $game->category->name }}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 mt-1">
+                                    @if($game->event_title)
+                                    <span class="text-xs font-semibold text-slate-200">{{ $game->event_title }}</span>
+                                    @else
                                     <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamHome->color_hex }}"></span>
                                     <span class="text-xs font-medium" style="color: {{ $game->teamHome->color_hex }}">{{ $game->teamHome->name }}</span>
                                     <span class="text-xs text-slate-600 font-bold">VS</span>
                                     <span class="text-xs font-medium" style="color: {{ $game->teamAway->color_hex }}">{{ $game->teamAway->name }}</span>
                                     <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamAway->color_hex }}"></span>
+                                    @endif
                                 </div>
                                 @if($game->location)
                                 <div class="flex items-center gap-1 mt-1 text-[11px] text-slate-500">
@@ -635,9 +646,18 @@
                     desktopHtml += '<div class="px-1.5 pb-1.5 flex-1 space-y-0.5 overflow-y-auto">';
                     dayGames.forEach(game => {
                         const statusColor = game.status === 'in_progress' ? 'border-l-green-500 bg-green-500/10' : (game.status === 'completed' ? 'border-l-blue-500/50 bg-blue-500/5' : 'border-l-slate-600 bg-white/[0.03]');
-                        // Use server-formatted time string to avoid client timezone differences
                         const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                        desktopHtml += `<div class="border-l-2 ${statusColor} rounded-r px-1.5 py-1 group cursor-default" title="${game.category.sport.name} ${game.category.name} — ${game.teamHome.name} vs ${game.teamAway.name} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
+                        const gameTitle = game.eventTitle || (game.teamHome.name + ' vs ' + game.teamAway.name);
+                        const gameDisplay = game.eventTitle
+                            ? `<span class="text-[10px] text-slate-300 truncate leading-tight font-medium">${game.eventTitle}</span>`
+                            : `<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
+                                <span class="text-[10px] text-slate-400 truncate leading-tight">
+                                    ${game.teamHome.name}
+                                    <span class="text-slate-600">vs</span>
+                                    ${game.teamAway.name}
+                                </span>
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>`;
+                        desktopHtml += `<div class="border-l-2 ${statusColor} rounded-r px-1.5 py-1 group cursor-default" title="${game.category.sport.name} ${game.category.name} — ${gameTitle} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
                             <div class="flex items-center gap-1 min-w-0">
                                 <span class="text-[11px] shrink-0">${game.category.sport.icon}</span>
                                 <span class="text-[11px] text-slate-400 truncate leading-tight">
@@ -645,15 +665,7 @@
                                     ${game.category.name}
                                 </span>
                             </div>
-                            <div class="flex items-center gap-1 mt-0.5 min-w-0">
-                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
-                                <span class="text-[10px] text-slate-400 truncate leading-tight">
-                                    ${game.teamHome.name}
-                                    <span class="text-slate-600">vs</span>
-                                    ${game.teamAway.name}
-                                </span>
-                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>
-                            </div>
+                            <div class="flex items-center gap-1 mt-0.5 min-w-0">${gameDisplay}</div>
                         </div>`;
                     });
                     desktopHtml += '</div>';
@@ -714,11 +726,14 @@
                                         <span class="text-xs text-slate-400 truncate">${game.category.name}</span>
                                     </div>
                                     <div class="flex items-center gap-1.5 mt-1">
-                                        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
-                                        <span class="text-xs font-medium" style="color: ${game.teamHome.colorHex}">${game.teamHome.name}</span>
-                                        <span class="text-xs text-slate-600 font-bold">VS</span>
-                                        <span class="text-xs font-medium" style="color: ${game.teamAway.colorHex}">${game.teamAway.name}</span>
-                                        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>
+                                        ${game.eventTitle
+                                            ? `<span class="text-xs font-semibold text-slate-200">${game.eventTitle}</span>`
+                                            : `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
+                                                <span class="text-xs font-medium" style="color: ${game.teamHome.colorHex}">${game.teamHome.name}</span>
+                                                <span class="text-xs text-slate-600 font-bold">VS</span>
+                                                <span class="text-xs font-medium" style="color: ${game.teamAway.colorHex}">${game.teamAway.name}</span>
+                                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>`
+                                        }
                                     </div>
                                     ${game.location ? `<div class="flex items-center gap-1 mt-1 text-[11px] text-slate-500">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
