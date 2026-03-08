@@ -8,8 +8,7 @@
 
     {{-- Header --}}
     <div class="mb-6">
-        <h1 class="text-2xl font-black text-white mb-1">Schedule</h1>
-        <p class="text-slate-400 text-sm">Upcoming, live, and past games</p>
+        <h1 class="text-2xl font-black text-white mb-1">Intramurals 2026 Schedule</h1>
     </div>
 
     {{-- Filters --}}
@@ -439,7 +438,7 @@
         const clearAllBtn = document.getElementById('clear-all-btn');
         const clearAllDivider = document.getElementById('clear-all-divider');
         const hasFilters = currentSports.length > 0 || currentStatuses.length > 0 || currentColors.length > 0;
-        
+
         if (hasFilters) {
             clearAllBtn.classList.remove('hidden');
             clearAllDivider.classList.remove('hidden');
@@ -536,7 +535,7 @@
         updateFilterUI();
 
         if (fetchTimeout) clearTimeout(fetchTimeout);
-        
+
         fetchTimeout = setTimeout(() => {
             document.getElementById('schedule-loading').classList.remove('hidden');
             document.getElementById('schedule-content').classList.add('hidden');
@@ -566,7 +565,7 @@
     function renderGames(gamesByDate) {
         console.log('Rendering games with calendarStart:', calendarStart, 'calendarEnd:', calendarEnd);
         console.log('gamesByDate keys:', gamesByDate ? Object.keys(gamesByDate) : 'none');
-        
+
         const desktopContainer = document.getElementById('desktop-calendar');
         const mobileContainer = document.getElementById('mobile-calendar');
         const emptyState = document.getElementById('empty-state');
@@ -588,7 +587,7 @@
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         console.log('Building dates from:', calendarStart, 'to', calendarEnd);
-        
+
         if (!calendarStart || !calendarEnd) {
             console.error('Invalid calendar dates!');
             return;
@@ -597,7 +596,7 @@
         const dates = [];
         let startDate = new Date(calendarStart + 'T00:00:00');
         const endDate = new Date(calendarEnd + 'T00:00:00');
-        
+
         console.log('Parsed dates - start:', startDate, 'end:', endDate, 'valid:', startDate instanceof Date && !isNaN(startDate), endDate instanceof Date && !isNaN(endDate));
         while (startDate <= endDate) {
             dates.push(new Date(startDate));

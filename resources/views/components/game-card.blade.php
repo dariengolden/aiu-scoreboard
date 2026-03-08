@@ -75,17 +75,16 @@ $matchParam = $game->match_number ?? $game->id;
         @php
             $dataKey = $sportType === 'sets' ? 'sets' : 'periods';
             $items = $gameData[$dataKey] ?? [];
-            $hasData = collect($items)->contains(fn($item) => ($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0);
+            // Show all sets/periods that have scores
+            $itemsWithScores = array_filter($items, fn($item) => ($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0);
         @endphp
-        @if($hasData)
+        @if(count($itemsWithScores) > 0)
         <div class="game-card-breakdown mt-2 pt-2 border-t border-white/5">
             <div class="flex items-center gap-1.5 text-xs tabular-nums">
-                @foreach($items as $i => $item)
-                @if(($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0)
+                @foreach($itemsWithScores as $item)
                 <span class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium">
                     {{ $item['home'] ?? 0 }}-{{ $item['away'] ?? 0 }}
                 </span>
-                @endif
                 @endforeach
             </div>
         </div>

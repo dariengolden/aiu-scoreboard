@@ -207,26 +207,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.classList.remove('border-green-500/20');
                 }
 
-                // Update period/set breakdown
+                // Update period/set breakdown - show all sets/periods with scores
                 const breakdownEl = card.querySelector('.game-card-breakdown');
                 if (game.game_data) {
-                    const dataKey = (game.game_data.sets) ? 'sets' : 'periods';
+                    const isSets = !!game.game_data.sets;
+                    const dataKey = isSets ? 'sets' : 'periods';
                     const items = game.game_data[dataKey] || [];
-                    const hasData = items.some(item => (item.home || 0) > 0 || (item.away || 0) > 0);
-
-                    if (hasData) {
+                    
+                    // For sets, show all sets that have scores
+                    // For periods, show all periods with scores
+                    const itemsWithScores = items.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
+                    
+                    if (itemsWithScores.length > 0) {
                         let html = '<div class="flex items-center gap-1.5 text-xs tabular-nums">';
-                        items.forEach(item => {
-                            if ((item.home || 0) > 0 || (item.away || 0) > 0) {
-                                html += `<span class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium">${item.home || 0}-${item.away || 0}</span>`;
-                            }
+                        itemsWithScores.forEach(item => {
+                            html += `<span class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium">${item.home || 0}-${item.away || 0}</span>`;
                         });
                         html += '</div>';
 
                         if (breakdownEl) {
                             breakdownEl.innerHTML = html;
                         } else {
-                            // Insert breakdown before draw indicator or at end of scores section
                             const scoresDiv = card.querySelector('.px-4.pb-3');
                             if (scoresDiv) {
                                 const div = document.createElement('div');
@@ -235,6 +236,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 scoresDiv.appendChild(div);
                             }
                         }
+                    } else if (breakdownEl) {
+                        breakdownEl.innerHTML = '';
                     }
                 }
             });

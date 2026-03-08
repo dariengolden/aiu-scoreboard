@@ -23,6 +23,7 @@
     }
 
     $hasBreakdown = collect($rows)->contains(fn($item) => ($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0);
+    $showBreakdownSection = $hasBreakdown || ($game->isLive() && in_array($type, ['sets', 'quarters', 'halves']));
 
     $showYellow = $disciplineConfig['yellow'] ?? false;
     $showRed = $disciplineConfig['red'] ?? false;
@@ -33,7 +34,7 @@
         ($showRed && (($game->red_cards_home ?? 0) > 0 || ($game->red_cards_away ?? 0) > 0));
 @endphp
 
-<div class="max-w-5xl mx-auto px-4 py-6">
+<div class="max-w-5xl mx-auto px-4 py-6" data-game-id="{{ $game->id }}" data-live="{{ $game->isLive() ? '1' : '0' }}" data-period-labels='@json($labels)' data-type="{{ $type }}" data-home-color="{{ $homeTeam->color_hex }}" data-away-color="{{ $awayTeam->color_hex }}" data-home-name="{{ $homeTeam->name }}" data-away-name="{{ $awayTeam->name }}">
 
     {{-- Breadcrumb --}}
     <div class="flex items-center gap-2 text-sm text-slate-400 mb-6">
@@ -93,19 +94,15 @@
                 <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                         {{ $game->match_label }}
-                        @if($game->current_period)
-                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[11px] font-bold">
-                                {{ $game->current_period }}
-                            </span>
-                        @endif
+                        <span class="game-current-period ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[11px] font-bold {{ !$game->current_period ? 'hidden' : '' }}">{{ $game->current_period ?? '' }}</span>
                     </div>
                     @if($game->isLive())
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500 text-white text-[11px] font-bold uppercase tracking-wider">
+                        <span class="game-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500 text-white text-[11px] font-bold uppercase tracking-wider">
                             <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
                             Live
                         </span>
                     @elseif($game->isCompleted())
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider">
+                        <span class="game-status-badge inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider">
                             Final
                         </span>
                     @endif
@@ -145,7 +142,7 @@
 
                         {{-- Scores row --}}
                         <div class="flex items-center justify-between gap-4">
-                            <div class="text-3xl md:text-4xl font-black tabular-nums {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-300' }}">
+                            <div class="game-score-home text-3xl md:text-4xl font-black tabular-nums {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-300' }}">
                                 {{ $game->score_home ?? '—' }}
                             </div>
 
@@ -153,7 +150,7 @@
                                 vs
                             </span>
 
-                            <div class="text-3xl md:text-4xl font-black tabular-nums text-right {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-300' }}">
+                            <div class="game-score-away text-3xl md:text-4xl font-black tabular-nums text-right {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-300' }}">
                                 {{ $game->score_away ?? '—' }}
                             </div>
                         </div>
@@ -170,8 +167,8 @@
                 </div>
             </div>
 
-            {{-- Period / Set breakdown --}}
-            @if($hasBreakdown)
+            {{-- Period / Set breakdown (always show for live set-based games so polling can populate) --}}
+            @if($showBreakdownSection)
                 <div class="bg-[#0f172a] rounded-2xl border border-white/5 overflow-hidden">
                     <div class="px-4 py-3 border-b border-white/5">
                         <h2 class="text-sm font-bold text-white uppercase tracking-wider">
@@ -232,7 +229,7 @@
                         @endif
 
                         {{-- Score breakdown --}}
-                        @if($hasBreakdown)
+                        @if($hasBreakdown || ($game->isLive() && in_array($type, ['sets', 'quarters', 'halves'])))
                             <div class="{{ $disciplineConfig && $hasCardDisciplineData ? 'pt-4 border-t border-white/5' : '' }}">
                                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
                                     @if($type === 'sets')
@@ -245,7 +242,7 @@
                                         Score breakdown
                                     @endif
                                 </h3>
-                                <div class="space-y-2">
+                                <div id="game-breakdown-rows" class="space-y-2">
                                     @foreach($rows as $i => $row)
                                         @php
                                             $home = $row['home'] ?? 0;
@@ -292,6 +289,120 @@
         </div>
     </div>
 </div>
+
+@if($game->isLive())
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('[data-game-id]');
+    if (!container || container.dataset.live !== '1') return;
+
+    const gameId = container.dataset.gameId;
+    const periodLabels = JSON.parse(container.dataset.periodLabels || '[]');
+    const type = container.dataset.type;
+    const homeColor = container.dataset.homeColor || '#94a3b8';
+    const awayColor = container.dataset.awayColor || '#94a3b8';
+    const homeName = container.dataset.homeName || 'Home';
+    const awayName = container.dataset.awayName || 'Away';
+
+    let pollingInterval = null;
+
+    function startPolling() {
+        poll();
+        pollingInterval = setInterval(poll, 5000);
+    }
+
+    async function poll() {
+        try {
+            const response = await axios.get('/api/games/batch', {
+                params: { ids: gameId }
+            });
+            const game = response.data[gameId];
+            if (!game) return;
+
+            // Update scores
+            const scoreHomeEl = container.querySelector('.game-score-home');
+            const scoreAwayEl = container.querySelector('.game-score-away');
+            if (scoreHomeEl) scoreHomeEl.textContent = game.score_home ?? '—';
+            if (scoreAwayEl) scoreAwayEl.textContent = game.score_away ?? '—';
+
+            // Update current period
+            const periodEl = container.querySelector('.game-current-period');
+            if (periodEl) {
+                if (game.current_period) {
+                    periodEl.textContent = game.current_period;
+                    periodEl.classList.remove('hidden');
+                } else {
+                    periodEl.textContent = '';
+                    periodEl.classList.add('hidden');
+                }
+            }
+
+            // Update status badge
+            const statusBadge = container.querySelector('.game-status-badge');
+            if (statusBadge) {
+                if (game.status === 'in_progress') {
+                    statusBadge.className = 'game-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500 text-white text-[11px] font-bold uppercase tracking-wider';
+                    statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Live';
+                } else if (game.status === 'completed') {
+                    statusBadge.className = 'game-status-badge inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider';
+                    statusBadge.textContent = 'Final';
+                }
+            }
+
+            // Update breakdown - same logic as home/scores (sets or periods with scores)
+            const breakdownRows = document.getElementById('game-breakdown-rows');
+            if (breakdownRows && game.game_data) {
+                const isSets = !!game.game_data.sets;
+                const dataKey = isSets ? 'sets' : 'periods';
+                const items = game.game_data[dataKey] || [];
+                const itemsWithScores = items.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
+
+                let html = '';
+                itemsWithScores.forEach((item, i) => {
+                    const home = item.home || 0;
+                    const away = item.away || 0;
+                    const label = periodLabels[i] || 'Period ' + (i + 1);
+                    const homeIsAhead = home > away;
+                    const awayIsAhead = away > home;
+                    html += `
+                        <div class="px-3 py-2 rounded-xl bg-slate-900/60 border border-white/5">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-full bg-white/5 text-[11px] font-semibold uppercase tracking-wider text-slate-300">${label}</span>
+                                </div>
+                                <div class="flex items-center gap-4 text-xs md:text-sm tabular-nums">
+                                    <div class="flex items-center gap-1">
+                                        <span class="w-2.5 h-2.5 rounded-full" style="background-color:${homeColor}"></span>
+                                        <span class="font-semibold ${homeIsAhead ? 'text-white' : 'text-slate-300'}">${home}</span>
+                                    </div>
+                                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">vs</span>
+                                    <div class="flex items-center gap-1">
+                                        <span class="w-2.5 h-2.5 rounded-full" style="background-color:${awayColor}"></span>
+                                        <span class="font-semibold ${awayIsAhead ? 'text-white' : 'text-slate-300'}">${away}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                breakdownRows.innerHTML = html;
+            }
+        } catch (err) {
+            console.error('Live score polling error:', err);
+        }
+    }
+
+    startPolling();
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            clearInterval(pollingInterval);
+        } else {
+            startPolling();
+        }
+    });
+});
+</script>
+@endif
 
 @endsection
 

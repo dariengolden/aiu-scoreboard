@@ -22,12 +22,6 @@ class Game extends Model
         'location',
         'notes',
         'winner_id',
-        'fouls_home',
-        'fouls_away',
-        'yellow_cards_home',
-        'yellow_cards_away',
-        'red_cards_home',
-        'red_cards_away',
     ];
 
     protected $casts = [
@@ -36,12 +30,6 @@ class Game extends Model
         'score_away' => 'integer',
         'match_number' => 'integer',
         'game_data' => 'array',
-        'fouls_home' => 'integer',
-        'fouls_away' => 'integer',
-        'yellow_cards_home' => 'integer',
-        'yellow_cards_away' => 'integer',
-        'red_cards_home' => 'integer',
-        'red_cards_away' => 'integer',
     ];
 
     /**
@@ -54,14 +42,9 @@ class Game extends Model
             'periods' => 4,
             'period_labels' => ['Q1', 'Q2', 'Q3', 'Q4'],
             'increments' => [1, 2, 3],
-            'increment_labels' => ['FT', '+2', '+3'],
+            'increment_labels' => ['+1', '+2', '+3'],
             'has_time' => true,
-            'formats' => null, // no format choice
-            'discipline' => [
-                'fouls' => true,
-                'yellow' => false,
-                'red' => false,
-            ],
+            'formats' => null,
         ],
         'soccer' => [
             'type' => 'halves',
@@ -71,21 +54,18 @@ class Game extends Model
             'increment_labels' => ['+1'],
             'has_time' => true,
             'formats' => null,
-            'discipline' => [
-                'fouls' => false,
-                'yellow' => true,
-                'red' => true,
-            ],
         ],
         'volleyball' => [
             'type' => 'sets',
-            'periods' => null, // determined by format
-            'period_labels' => null, // generated dynamically
+            'periods' => null,
+            'period_labels' => null,
             'increments' => [1],
             'increment_labels' => ['+1'],
             'has_time' => false,
             'formats' => ['best_of_3' => 'Best of 3', 'best_of_5' => 'Best of 5'],
             'default_format' => 'best_of_5',
+            'winning_score' => 25,
+            'lead_required' => 2,
         ],
         'takraw' => [
             'type' => 'sets',
@@ -96,6 +76,8 @@ class Game extends Model
             'has_time' => false,
             'formats' => ['best_of_3' => 'Best of 3', 'best_of_5' => 'Best of 5'],
             'default_format' => 'best_of_3',
+            'winning_score' => 21,
+            'lead_required' => 2,
         ],
         'table-tennis' => [
             'type' => 'sets',
@@ -106,6 +88,8 @@ class Game extends Model
             'has_time' => false,
             'formats' => ['best_of_3' => 'Best of 3', 'best_of_5' => 'Best of 5'],
             'default_format' => 'best_of_5',
+            'winning_score' => 11,
+            'lead_required' => 2,
         ],
         'badminton' => [
             'type' => 'sets',
@@ -116,6 +100,8 @@ class Game extends Model
             'has_time' => false,
             'formats' => ['best_of_3' => 'Best of 3'],
             'default_format' => 'best_of_3',
+            'winning_score' => 21,
+            'lead_required' => 2,
         ],
         'running' => [
             'type' => 'time',
@@ -267,8 +253,28 @@ class Game extends Model
     }
 
     /**
-     * Recalculate total scores from game_data periods.
-     * For set-based sports, score = sets won. For period-based, score = sum of period scores.
+     * Get set winner from home/away scores (higher score wins).
+     * Returns: 'home', 'away', or null if draw.
+     */
+    public function getSetWinner(array $set): ?string
+    {
+        $home = (int) ($set['home'] ?? 0);
+        $away = (int) ($set['away'] ?? 0);
+
+        if ($home > $away) {
+            return 'home';
+        }
+        if ($away > $home) {
+            return 'away';
+        }
+
+        return null;
+    }
+
+    /**
+     * Recalculate total scores from game_data.
+     * For set-based sports: score = sets won (not raw points).
+     * For period-based sports: score = sum of period scores.
      */
     public function recalculateTotalsFromGameData(): void
     {
@@ -282,33 +288,98 @@ class Game extends Model
         $type = $config['type'];
 
         if ($type === 'sets') {
-            // Score = number of sets won
             $setsWonHome = 0;
             $setsWonAway = 0;
             $sets = $data['sets'] ?? [];
-            foreach ($sets as $set) {
-                $h = $set['home'] ?? 0;
-                $a = $set['away'] ?? 0;
-                if ($h > $a) {
-                    $setsWonHome++;
-                } elseif ($a > $h) {
-                    $setsWonAway++;
+
+            // Total = sets won. Only count sets user marked as complete.
+            foreach ($sets as $index => $set) {
+                if (empty($set['complete'])) {
+                    continue;
+                }
+
+                $winner = $this->getSetWinner($set);
+
+                if ($winner) {
+                    $sets[$index]['winner'] = $winner;
+                    if ($winner === 'home') {
+                        $setsWonHome++;
+                    } else {
+                        $setsWonAway++;
+                    }
                 }
             }
+
+            // Update game_data with winner tracking
+            $this->game_data = array_merge($data, ['sets' => $sets]);
+
             $this->score_home = $setsWonHome;
             $this->score_away = $setsWonAway;
         } elseif (in_array($type, ['quarters', 'halves'])) {
-            // Score = sum of all period scores
             $totalHome = 0;
             $totalAway = 0;
             $periods = $data['periods'] ?? [];
+
             foreach ($periods as $period) {
                 $totalHome += $period['home'] ?? 0;
                 $totalAway += $period['away'] ?? 0;
             }
+
             $this->score_home = $totalHome;
             $this->score_away = $totalAway;
         }
+    }
+
+    /**
+     * Get the number of completed sets.
+     */
+    public function getCompletedSetsCount(): int
+    {
+        $data = $this->game_data;
+        if (! $data) {
+            return 0;
+        }
+
+        $sets = $data['sets'] ?? [];
+        $completed = 0;
+
+        foreach ($sets as $set) {
+            if (! empty($set['complete'])) {
+                $completed++;
+            }
+        }
+
+        return $completed;
+    }
+
+    /**
+     * Get sets data for display (only completed sets with scores).
+     */
+    public function getCompletedSets(): array
+    {
+        $data = $this->game_data;
+        if (! $data) {
+            return [];
+        }
+
+        $sets = $data['sets'] ?? [];
+        $completed = [];
+
+        foreach ($sets as $set) {
+            $home = $set['home'] ?? 0;
+            $away = $set['away'] ?? 0;
+
+            // Include any set with scores (not just completed ones)
+            if ($home > 0 || $away > 0) {
+                $completed[] = [
+                    'home' => $home,
+                    'away' => $away,
+                    'winner' => $this->getSetWinner($set),
+                ];
+            }
+        }
+
+        return $completed;
     }
 
     /**

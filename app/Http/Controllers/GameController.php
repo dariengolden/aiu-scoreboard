@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
 use App\Models\Category;
+use App\Models\Game;
 use App\Models\Sport;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +23,7 @@ class GameController extends Controller
             ->where('category_id', $categoryModel->id)
             ->where(function ($q) use ($match) {
                 $q->where('match_number', $match)
-                  ->orWhere('id', $match);
+                    ->orWhere('id', $match);
             })
             ->firstOrFail();
 
@@ -58,10 +58,6 @@ class GameController extends Controller
         $validated = $request->validate([
             'score_home' => ['nullable', 'integer', 'min:0'],
             'score_away' => ['nullable', 'integer', 'min:0'],
-            'yellow_cards_home' => ['nullable', 'integer', 'min:0'],
-            'yellow_cards_away' => ['nullable', 'integer', 'min:0'],
-            'red_cards_home' => ['nullable', 'integer', 'min:0'],
-            'red_cards_away' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:upcoming,in_progress,completed'],
             'scheduled_at' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -118,6 +114,9 @@ class GameController extends Controller
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        // Load relationships needed for recalculateTotalsFromGameData()
+        $game->load(['category.sport']);
+
         // If format changed and this is a set-based sport, reinitialize game data
         if (isset($validated['game_format']) && $validated['game_format'] !== $game->game_format) {
             $game->game_format = $validated['game_format'];
@@ -147,8 +146,11 @@ class GameController extends Controller
             $game->score_home = $validated['score_home'];
             $game->score_away = $validated['score_away'];
         } else {
-            // Recalculate totals from game_data
-            $game->recalculateTotalsFromGameData();
+            // Always recalculate totals from game_data when game_data is provided
+            // This ensures live scores stay in sync for all sport types (sets, quarters, halves)
+            if (isset($validated['game_data'])) {
+                $game->recalculateTotalsFromGameData();
+            }
         }
 
         // Auto-determine winner when completed
