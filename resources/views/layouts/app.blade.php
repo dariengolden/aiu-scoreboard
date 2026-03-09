@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'AIU Scoreboard') — AIU Scoreboard</title>
-    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <title>@yield('title', 'Scoreboard') | 2026 INTRAMURALS</title>
+    <link rel="icon" type="image/png" href="{{ asset('sc-white.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
@@ -20,8 +20,10 @@
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             {{-- Logo --}}
             <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-8 w-8 rounded">
-                <span class="text-2xl font-bold tracking-tight text-white">AIU <span class="text-white">Scoreboard</span></span>
+                <img src="{{ asset('sc-white.png') }}" alt="AIU Intramurals 2026" class="h-8 w-8 rounded">
+                <span class="text-2xl font-bold tracking-tight text-white">
+    <span class="text-white">2026 INTRAMURALS</span>
+</span>
             </a>
 
             {{-- Desktop nav --}}
@@ -88,7 +90,8 @@
     <footer class="mt-6 md:mt-16 bg-[#060b18] border-t border-white/10">
         <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex items-center justify-between gap-4">
                 {{-- Logo --}}
-                <a href="{{ route('home') }}" class="shrink-0">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
+                    <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-5 w-auto">
                     <img src="{{ asset('sc-white.png') }}" alt="AIU Scoreboard" class="h-5 w-auto">
                 </a>
 

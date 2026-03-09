@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0c1445">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') — AIU Scoreboard</title>
+    <title>@yield('title', 'Dashboard') — 2026 INTRAMURALS</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,11 +15,11 @@
 <body class="bg-[#0f172a] text-white min-h-screen font-sans antialiased">
 
     {{-- Top bar --}}
-    <header class="sticky top-0 z-50 bg-[#0c1445]/95 backdrop-blur border-b border-white/10">
+    <header class="sticky top-0 z-50 bg-[#020617]/95 backdrop-blur border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-8 w-8 rounded">
-                <span class="text-lg font-bold text-white">Scoreboard <span class="text-blue-400">Admin</span></span>
+                <img src="{{ asset('sc-white.png') }}" alt="AIU Student Council" class="h-8 w-8 rounded">
+                <span class="text-lg font-bold text-white">SCOREBOARD <span class="text-blue-400">ADMIN</span></span>
             </div>
 
             <div class="flex items-center gap-3">

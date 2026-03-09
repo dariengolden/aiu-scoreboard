@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Intramurals 2026')
+@section('title', 'Scoreboard')
 
 @section('content')
 
@@ -8,9 +8,9 @@
 <section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden">
     <div class="relative max-w-7xl mx-auto px-4 py-12 md:py-20 text-center">
         <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Intramurals</span> 2026
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Official Scoreboard</span>
         </h1>
-        <p class="text-slate-300 text-lg">Get live scores or check upcoming games here.</p>
+        <p class="text-slate-300 text-lg">Get live scores or check upcoming games for the 2026 AIU Intramurals.</p>
     </div>
 </section>
 
@@ -38,7 +38,7 @@
 <section class="max-w-7xl mx-auto px-4 py-4">
     <div class="flex items-center justify-between mb-5">
         <h2 class="text-lg font-bold text-white">Recent<span class="text-slate-500 font-normal text-sm"></span></h2>
-        <a href="{{ route('schedule') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
+        <a href="{{ route('scores.index') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($recentResults as $game)

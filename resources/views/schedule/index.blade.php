@@ -8,7 +8,7 @@
 
     {{-- Header --}}
     <div class="mb-6">
-        <h1 class="text-2xl font-black text-white mb-1">Intramurals 2026 Schedule</h1>
+        <h1 class="text-2xl font-black text-white mb-1">Schedule</h1>
     </div>
 
     {{-- Filters --}}
