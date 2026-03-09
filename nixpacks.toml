@@ -8,9 +8,14 @@
 [phases.build]
 cmds = [
     "npm run build",
-    "php artisan migrate:fresh --force",
     "php artisan view:cache",
     "php artisan route:cache"
+]
+
+[phases.release]
+dependsOn = ['build']
+cmds = [
+    "php artisan migrate --force"
 ]
 
 [phases.setup]
