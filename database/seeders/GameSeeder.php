@@ -116,7 +116,7 @@ class GameSeeder extends Seeder
         $game('Basketball', 'Women', 'Red', 'Purple', 8, '19:30');
         $game('Soccer', 'Men', 'Red', 'Pink', 8, '19:30');
         $game('Volleyball', 'Women', 'Pink', 'Blue', 8, '19:30');
-        $game('Takraw', 'Men', 'Purple', 'Blue', 8, '19:30');
+        $game('Takraw', 'Men', 'Pink', 'Blue', 8, '19:30');
         $game('Table Tennis', "Women's Singles", 'Purple', 'Blue', 8, '19:30');
         $game('Table Tennis', "Men's Singles", 'Purple', 'Blue', 8, '20:00');
 

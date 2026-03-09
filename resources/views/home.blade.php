@@ -37,7 +37,7 @@
 @if($recentResults->isNotEmpty())
 <section class="max-w-7xl mx-auto px-4 py-4">
     <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-white">Recent Results <span class="text-slate-500 font-normal text-sm">(last 24 hours)</span></h2>
+        <h2 class="text-lg font-bold text-white">Recent<span class="text-slate-500 font-normal text-sm"></span></h2>
         <a href="{{ route('schedule') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -52,7 +52,7 @@
 @if($upcomingGames->isNotEmpty())
 <section class="max-w-7xl mx-auto px-4 py-4">
     <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-white">Upcoming Games</h2>
+        <h2 class="text-lg font-bold text-white">Upcoming</h2>
         <a href="{{ route('schedule') }}" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View all &rarr;</a>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
