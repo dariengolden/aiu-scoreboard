@@ -77,7 +77,7 @@
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $game->match_label }}</span>
-                @if($isLive || $game->current_period)
+                @if(($isLive || $game->current_period) && !$game->isCompleted())
                     <span class="game-card-period text-xs font-bold text-blue-400">{{ $game->current_period ?? '' }}</span>
                 @endif
             </div>
