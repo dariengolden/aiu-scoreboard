@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[300px] md:min-h-[400px]">
+<section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[230px] md:min-h-[400px]">
     <div class="absolute inset-0 z-0">
         @for($i = 1; $i <= 4; $i++)
         <img
@@ -19,11 +19,11 @@
         @endfor
         <div class="absolute inset-0 bg-black/50"></div>
     </div>
-    <div class="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-20 flex flex-col items-center justify-center text-center min-h-[300px] md:min-h-[400px]">
-        <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-lg">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 py-8 md:py-20 flex flex-col items-center justify-center text-center min-h-[230px] md:min-h-[400px]">
+        <h1 class="text-3xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-lg">
             <span>Official Scoreboard</span>
         </h1>
-        <p class="text-slate-300 text-lg drop-shadow-md">Get live scores or check upcoming games for the 2026 AIU Intramurals.</p>
+        <p class="text-slate-300 text-base md:text-lg drop-shadow-md">Get live scores or check upcoming games for the 2026 AIU Intramurals.</p>
     </div>
 </section>
 
