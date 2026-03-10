@@ -12,6 +12,7 @@ class GameResource extends JsonResource
         return [
             'id' => $this->id,
             'matchNumber' => $this->match_number,
+            'matchParam' => $this->match_number ?? $this->id,
             'status' => $this->status,
             // Keep raw datetime for potential future use, but also provide a
             // preformatted time string so the client can display times without
@@ -25,9 +26,11 @@ class GameResource extends JsonResource
             'currentPeriod' => $this->current_period,
             'category' => [
                 'name' => $this->category->name,
+                'slug' => $this->category->slug,
                 'sport' => [
                     'name' => $this->category->sport->name,
                     'icon' => $this->category->sport->icon,
+                    'slug' => $this->category->sport->slug,
                 ],
             ],
             'teamHome' => [

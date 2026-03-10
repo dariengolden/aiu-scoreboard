@@ -267,7 +267,7 @@
                     @php
                         $gameTitle = $game->event_title ?: $game->teamHome->name . ' vs ' . $game->teamAway->name;
                     @endphp
-                    <div class="border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group cursor-default" title="{{ $game->category->sport->name }} {{ $game->category->name }} — {{ $gameTitle }} @ {{ $game->scheduled_at->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
+                    <a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}" class="block border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors" title="{{ $game->category->sport->name }} {{ $game->category->name }} — {{ $gameTitle }} @ {{ $game->scheduled_at->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
                         <div class="flex items-center gap-1 min-w-0">
                             <span class="text-[11px] shrink-0">{{ $game->category->sport->icon }}</span>
                             <span class="text-[11px] text-slate-400 truncate leading-tight">
@@ -288,7 +288,7 @@
                             <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamAway->color_hex }}"></span>
                             @endif
                         </div>
-                    </div>
+                    </a>
                     @endforeach
                 </div>
                 @endif
@@ -333,7 +333,7 @@
                 {{-- Games for this day --}}
                 <div class="divide-y divide-white/5">
                     @foreach($dayGames as $game)
-                    <div class="px-4 py-3">
+                    <a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}" class="block px-4 py-3 hover:bg-white/5 transition-colors">
                         <div class="flex items-start gap-3">
                             {{-- Time column --}}
                             <div class="shrink-0 w-14 pt-0.5 text-right">
@@ -385,7 +385,7 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    </a>
                     @endforeach
                 </div>
             </div>
@@ -657,7 +657,7 @@
                                     ${game.teamAway.name}
                                 </span>
                                 <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>`;
-                        desktopHtml += `<div class="border-l-2 ${statusColor} rounded-r px-1.5 py-1 group cursor-default" title="${game.category.sport.name} ${game.category.name} — ${gameTitle} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
+                        desktopHtml += `<a href="/scores/${game.category.sport.slug}/${game.category.slug}/match-${game.matchParam}" class="block border-l-2 ${statusColor} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors" title="${game.category.sport.name} ${game.category.name} — ${gameTitle} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
                             <div class="flex items-center gap-1 min-w-0">
                                 <span class="text-[11px] shrink-0">${game.category.sport.icon}</span>
                                 <span class="text-[11px] text-slate-400 truncate leading-tight">
@@ -666,7 +666,7 @@
                                 </span>
                             </div>
                             <div class="flex items-center gap-1 mt-0.5 min-w-0">${gameDisplay}</div>
-                        </div>`;
+                        </a>`;
                     });
                     desktopHtml += '</div>';
                 }
@@ -710,7 +710,7 @@
 
                     dayGames.forEach(game => {
                         const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                        mobileHtml += `<div class="px-4 py-3">
+                        mobileHtml += `<a href="/scores/${game.category.sport.slug}/${game.category.slug}/match-${game.matchParam}" class="block px-4 py-3 hover:bg-white/5 transition-colors">
                             <div class="flex items-start gap-3">
                                 <div class="shrink-0 w-14 pt-0.5 text-right">
                                     <span class="text-xs font-semibold ${game.status === 'in_progress' ? 'text-green-400' : 'text-slate-400'}">
@@ -743,7 +743,7 @@
                                     ${game.status === 'completed' ? '<div class="mt-1"><span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/30 text-blue-300">Final</span></div>' : ''}
                                 </div>
                             </div>
-                        </div>`;
+                        </a>`;
                     });
 
                     mobileHtml += '</div></div>';
