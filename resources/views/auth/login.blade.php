@@ -22,7 +22,7 @@
 <div class="w-full max-w-sm">
     {{-- Logo / Branding --}}
     <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-white mb-1">AIU <span class="text-blue-400">Sports</span></h1>
+        <h1 class="text-3xl font-black text-white mb-1">2026 <span class="text-blue-400">AIU INTRAMURALS</span></h1>
         <p class="text-slate-400 text-sm">Staff login</p>
     </div>
 
