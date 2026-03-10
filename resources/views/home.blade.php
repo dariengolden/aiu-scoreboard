@@ -5,12 +5,25 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden">
-    <div class="relative max-w-7xl mx-auto px-4 py-12 md:py-20 text-center">
-        <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Official Scoreboard</span>
+<section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[300px] md:min-h-[400px]">
+    <div class="absolute inset-0 z-0">
+        @for($i = 1; $i <= 4; $i++)
+        <img
+            src="/images/hero-0{{ $i }}.webp"
+            alt=""
+            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out hero-slide opacity-0"
+            data-slide="{{ $i }}"
+            loading="eager"
+            fetchpriority="high"
+        >
+        @endfor
+        <div class="absolute inset-0 bg-black/50"></div>
+    </div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-20 flex flex-col items-center justify-center text-center min-h-[300px] md:min-h-[400px]">
+        <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-lg">
+            <span>Official Scoreboard</span>
         </h1>
-        <p class="text-slate-300 text-lg">Get live scores or check upcoming games for the 2026 AIU Intramurals.</p>
+        <p class="text-slate-300 text-lg drop-shadow-md">Get live scores or check upcoming games for the 2026 AIU Intramurals.</p>
     </div>
 </section>
 
@@ -146,3 +159,26 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.hero-slide');
+    if (slides.length === 0) return;
+
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('opacity-100', i === index);
+            slide.classList.toggle('opacity-0', i !== index);
+        });
+    }
+
+    showSlide(currentSlide);
+
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }, 3000);
+});
+</script>
