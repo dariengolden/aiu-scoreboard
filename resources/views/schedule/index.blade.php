@@ -92,28 +92,10 @@
                 @endif
 
                 {{-- Active filter chips (inline in header) --}}
-                <span id="active-filters">
-                @foreach($selectedStatuses as $key)
-                    <a href="{{ scheduleRemoveUrl($selectedSports, $selectedStatuses, removeStatus: $key) }}"
-                       data-filter-status-remove="{{ $key }}"
-                       onclick="event.preventDefault(); removeFilter('status', '{{ $key }}')"
-                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/15 text-blue-400 text-xs font-medium hover:bg-blue-600/25 transition-colors">
-                        {{ $statusOptions[$key] ?? $key }}
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </a>
-                @endforeach
-                @foreach($selectedSports as $slug)
-                    @php $sportObj = $sports->firstWhere('slug', $slug); @endphp
-                    @if($sportObj)
-                    <a href="{{ scheduleRemoveUrl($selectedSports, $selectedStatuses, removeSport: $slug) }}"
-                       data-filter-sport-remove="{{ $slug }}"
-                       onclick="event.preventDefault(); removeFilter('sport', '{{ $slug }}')"
-                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/15 text-blue-400 text-xs font-medium hover:bg-blue-600/25 transition-colors">
-                        {{ $sportObj->icon }} {{ $sportObj->name }}
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </a>
-                    @endif
-                @endforeach
+                <span id="active-filters" class="text-xs text-slate-400">
+                @if($filterCount > 0)
+                    {{ $filterCount }} applied
+                @endif
                 </span>
 
                 {{-- Spacer + clear all + divider + chevron --}}
@@ -463,40 +445,13 @@
 
     function updateActiveFilters() {
         const container = document.getElementById('active-filters');
-        let html = '';
-
-        const statusLabels = { upcoming: 'Upcoming', live: 'Live', past: 'Past' };
-
-        currentStatuses.forEach(status => {
-            const label = statusLabels[status] || status;
-            html += `<a href="#" data-filter-status-remove="${status}" onclick="event.preventDefault(); removeFilter('status', '${status}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/15 text-blue-400 text-xs font-medium hover:bg-blue-600/25 transition-colors">
-                ${label}
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </a>`;
-        });
-
-        currentSports.forEach(slug => {
-            const sport = sportsData.find(s => s.slug === slug);
-            if (sport) {
-                html += `<a href="#" data-filter-sport-remove="${slug}" onclick="event.preventDefault(); removeFilter('sport', '${slug}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/15 text-blue-400 text-xs font-medium hover:bg-blue-600/25 transition-colors">
-                    ${sport.icon} ${sport.name}
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </a>`;
-            }
-        });
-
-        currentColors.forEach(colorId => {
-            const team = teamsData.find(t => t.id == colorId);
-            if (team) {
-                html += `<a href="#" data-filter-color-remove="${colorId}" onclick="event.preventDefault(); removeFilter('color', '${colorId}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/15 text-blue-400 text-xs font-medium hover:bg-blue-600/25 transition-colors">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${team.colorHex}"></span>
-                    ${team.name}
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </a>`;
-            }
-        });
-
-        container.innerHTML = html;
+        const filterCount = currentStatuses.length + currentSports.length + currentColors.length;
+        
+        if (filterCount > 0) {
+            container.innerHTML = `${filterCount} applied`;
+        } else {
+            container.innerHTML = '';
+        }
     }
 
     window.toggleFilter = function(type, value) {
