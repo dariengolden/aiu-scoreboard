@@ -20,6 +20,7 @@ class GameResource extends JsonResource
             'scheduledAt' => $this->scheduled_at,
             'scheduledEndAt' => $this->scheduled_end_at,
             'scheduledTime' => $this->scheduled_at?->format('g:ia'),
+            'scheduledDateTime' => $this->scheduled_at?->format('D, M j · g:ia'),
             'location' => $this->location,
             'scoreHome' => $this->score_home,
             'scoreAway' => $this->score_away,

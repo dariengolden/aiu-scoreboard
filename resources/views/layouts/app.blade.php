@@ -34,7 +34,7 @@
                 </a>
 
                 <a href="{{ route('scores.index') }}"
-                   class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('scores.*') ? 'bg-blue-500/15 text-blue-400' : 'text-slate-300 hover:text-white hover:bg-white/10' }}">
+                   class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs(['scores.*', 'games.show']) ? 'bg-blue-500/15 text-blue-400' : 'text-slate-300 hover:text-white hover:bg-white/10' }}">
                     Scores
                 </a>
 
@@ -127,7 +127,7 @@
             </a>
 
             <a href="{{ route('scores.index') }}"
-               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('scores.*') ? 'text-blue-400' : 'text-slate-400' }}">
+               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs(['scores.*', 'games.show']) ? 'text-blue-400' : 'text-slate-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 Scores
             </a>

@@ -12,8 +12,8 @@
     $isCeremony = !empty($game->event_type);
 @endphp
 
-@if($isCeremony)
-    {{-- Ceremony: non-clickable card --}}
+@if($isCeremony || !$sportSlug || !$game->category?->slug)
+    {{-- Ceremony OR missing category/sport: non-clickable card --}}
     <div class="game-card block bg-[#1e293b] rounded-2xl overflow-hidden border border-white/5 flex flex-col h-full">
         {{-- Sport + Category + Status header --}}
         <div class="px-4 pt-3 pb-2">
@@ -52,9 +52,9 @@
         </div>
         @endif
     </div>
-@else
-    {{-- Regular game: clickable card --}}
-    <a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $matchParam]) }}"
+@elseif($sportSlug && $game->category?->slug)
+    {{-- Regular game with valid sport/category: clickable card --}}
+    <a href="{{ route('games.show', ['sport' => $sportSlug, 'category' => $game->category->slug, 'match' => $matchParam]) }}"
        class="game-card block bg-[#1e293b] rounded-2xl overflow-hidden border border-white/5 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/10 transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 {{ $isLive ? 'border-green-500/20' : '' }}"
        data-game-id="{{ $game->id }}"
        data-is-live="{{ $isLive ? '1' : '0' }}"
