@@ -507,6 +507,19 @@
         </div>
     </form>
 
+    {{-- Clear Scores --}}
+    <form id="clear-scores-form" action="{{ route('games.update', $game) }}" method="POST" class="pb-3">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="status" value="{{ $game->status }}">
+        <input type="hidden" name="score_home" value="">
+        <input type="hidden" name="score_away" value="">
+        <button type="button" id="clear-scores-btn"
+                class="w-full bg-amber-600/15 hover:bg-amber-600/25 active:bg-amber-600/35 text-amber-400 font-bold py-4 rounded-xl transition-colors text-sm border border-amber-500/20">
+            Clear Scores
+        </button>
+    </form>
+
     {{-- Reset Match --}}
     <form id="reset-form" action="{{ route('games.reset', $game) }}" method="POST" class="pb-6">
         @csrf
@@ -617,6 +630,21 @@
         );
         if (confirmed) {
             resetForm.submit();
+        }
+    });
+
+    // ── Clear Scores Confirmation ───────────────────────────────────────────
+    const clearScoresBtn = document.getElementById('clear-scores-btn');
+    const clearScoresForm = document.getElementById('clear-scores-form');
+
+    clearScoresBtn.addEventListener('click', async () => {
+        const confirmed = await showModal(
+            'Clear Scores?',
+            'Are you sure you want to clear both scores to null? This action cannot be undone.',
+            'Clear Scores'
+        );
+        if (confirmed) {
+            clearScoresForm.submit();
         }
     });
 
