@@ -216,7 +216,7 @@
                         };
                     @endphp
                     @php
-                        $gameTitle = $game->event_title ?: $game->teamHome->name . ' vs ' . $game->teamAway->name;
+                        $gameTitle = $game->event_title ?: ($game->teamHome?->name ?? 'TBD') . ' vs ' . ($game->teamAway?->name ?? 'TBD');
                         $sportConfig = $game->sport_config;
                         $sportType = $sportConfig['type'] ?? null;
                         $gameData = $game->game_data ?? [];
@@ -229,46 +229,46 @@
                             $breakdownItems = array_filter($items, fn($item) => ($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0);
                         }
                     @endphp
-                    <a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}"
+                    <a href="{{ route('games.show', ['sport' => $game->category?->sport?->slug, 'category' => $game->category?->slug, 'match' => $game->match_number ?? $game->id]) }}"
                        onclick="event.preventDefault(); openGameModal({{ $game->id }})"
                        data-game-id="{{ $game->id }}"
-                       data-sport-icon="{{ $game->category->sport->icon ?? '' }}"
-                       data-sport-name="{{ $game->category->sport->name ?? '' }}"
-                       data-category-name="{{ $game->category->name ?? '' }}"
+                       data-sport-icon="{{ $game->category?->sport?->icon ?? '' }}"
+                       data-sport-name="{{ $game->category?->sport?->name ?? '' }}"
+                       data-category-name="{{ $game->category?->name ?? '' }}"
                        data-match-label="{{ $game->match_label ?? '' }}"
-                       data-home-name="{{ $game->teamHome->name }}"
-                       data-home-color="{{ $game->teamHome->color_hex }}"
-                       data-away-name="{{ $game->teamAway->name }}"
-                       data-away-color="{{ $game->teamAway->color_hex }}"
+                       data-home-name="{{ $game->teamHome?->name ?? 'TBD' }}"
+                       data-home-color="{{ $game->teamHome?->color_hex ?? '#94a3b8' }}"
+                       data-away-name="{{ $game->teamAway?->name ?? 'TBD' }}"
+                       data-away-color="{{ $game->teamAway?->color_hex ?? '#94a3b8' }}"
                        data-score-home="{{ $game->score_home ?? '' }}"
                        data-score-away="{{ $game->score_away ?? '' }}"
                        data-status="{{ $game->status }}"
                        data-current-period="{{ $game->current_period ?? '' }}"
                        data-scheduled-at="{{ $game->scheduled_at?->format('D, M j · g:ia') }}"
                        data-location="{{ $game->location ?? '' }}"
-                       data-game-url="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}"
+                       data-game-url="{{ route('games.show', ['sport' => $game->category?->sport?->slug, 'category' => $game->category?->slug, 'match' => $game->match_number ?? $game->id]) }}"
                        data-breakdown='@json($breakdownItems)'
                        data-period-labels='@json($periodLabels)'
                        class="block border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors cursor-pointer"
-                       title="{{ $game->category->sport->name }} {{ $game->category->name }} — {{ $gameTitle }} @ {{ $game->scheduled_at->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
+                       title="{{ $game->category?->sport?->name ?? '' }} {{ $game->category?->name ?? '' }} — {{ $gameTitle }} @ {{ $game->scheduled_at?->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
                         <div class="flex items-center gap-1 min-w-0">
-                            <span class="text-[11px] shrink-0">{{ $game->category->sport->icon }}</span>
+                            <span class="text-[11px] shrink-0">{{ $game->category?->sport?->icon ?? '' }}</span>
                             <span class="text-[11px] text-slate-400 truncate leading-tight">
-                                <span class="font-medium text-slate-300">{{ $game->scheduled_at->format('g:ia') }}</span>
-                                {{ $game->category->name }}
+                                <span class="font-medium text-slate-300">{{ $game->scheduled_at?->format('g:ia') }}</span>
+                                {{ $game->category?->name ?? '' }}
                             </span>
                         </div>
                         <div class="flex items-center gap-1 mt-0.5 min-w-0">
                             @if($game->event_title)
                             <span class="text-[10px] text-slate-300 truncate leading-tight font-medium">{{ $game->event_title }}</span>
                             @else
-                            <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamHome->color_hex }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}"></span>
                             <span class="text-[10px] text-slate-400 truncate leading-tight">
-                                {{ $game->teamHome->name }}
+                                {{ $game->teamHome?->name ?? 'TBD' }}
                                 <span class="text-slate-600">vs</span>
-                                {{ $game->teamAway->name }}
+                                {{ $game->teamAway?->name ?? 'TBD' }}
                             </span>
-                            <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamAway->color_hex }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamAway?->color_hex ?? '#94a3b8' }}"></span>
                             @endif
                         </div>
                     </a>
@@ -325,24 +325,24 @@
                             $breakdownItems = array_filter($items, fn($item) => ($item['home'] ?? 0) > 0 || ($item['away'] ?? 0) > 0);
                         }
                     @endphp
-                    <a href="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}"
+                    <a href="{{ route('games.show', ['sport' => $game->category?->sport?->slug, 'category' => $game->category?->slug, 'match' => $game->match_number ?? $game->id]) }}"
                        onclick="event.preventDefault(); openGameModal({{ $game->id }})"
                        data-game-id="{{ $game->id }}"
-                       data-sport-icon="{{ $game->category->sport->icon ?? '' }}"
-                       data-sport-name="{{ $game->category->sport->name ?? '' }}"
-                       data-category-name="{{ $game->category->name ?? '' }}"
+                       data-sport-icon="{{ $game->category?->sport?->icon ?? '' }}"
+                       data-sport-name="{{ $game->category?->sport?->name ?? '' }}"
+                       data-category-name="{{ $game->category?->name ?? '' }}"
                        data-match-label="{{ $game->match_label ?? '' }}"
-                       data-home-name="{{ $game->teamHome->name }}"
-                       data-home-color="{{ $game->teamHome->color_hex }}"
-                       data-away-name="{{ $game->teamAway->name }}"
-                       data-away-color="{{ $game->teamAway->color_hex }}"
+                       data-home-name="{{ $game->teamHome?->name ?? 'TBD' }}"
+                       data-home-color="{{ $game->teamHome?->color_hex ?? '#94a3b8' }}"
+                       data-away-name="{{ $game->teamAway?->name ?? 'TBD' }}"
+                       data-away-color="{{ $game->teamAway?->color_hex ?? '#94a3b8' }}"
                        data-score-home="{{ $game->score_home ?? '' }}"
                        data-score-away="{{ $game->score_away ?? '' }}"
                        data-status="{{ $game->status }}"
                        data-current-period="{{ $game->current_period ?? '' }}"
                        data-scheduled-at="{{ $game->scheduled_at?->format('D, M j · g:ia') }}"
                        data-location="{{ $game->location ?? '' }}"
-                       data-game-url="{{ route('games.show', ['sport' => $game->category->sport->slug, 'category' => $game->category->slug, 'match' => $game->match_number ?? $game->id]) }}"
+                       data-game-url="{{ route('games.show', ['sport' => $game->category?->sport?->slug, 'category' => $game->category?->slug, 'match' => $game->match_number ?? $game->id]) }}"
                        data-breakdown='@json($breakdownItems)'
                        data-period-labels='@json($periodLabels)'
                        class="block px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer">
@@ -350,7 +350,7 @@
                             {{-- Time column --}}
                             <div class="shrink-0 w-14 pt-0.5 text-right">
                                 <span class="text-xs font-semibold {{ $game->status === 'in_progress' ? 'text-green-400' : 'text-slate-400' }}">
-                                    {{ $game->scheduled_at->format('g:ia') }}
+                                    {{ $game->scheduled_at?->format('g:ia') }}
                                 </span>
                             </div>
                             {{-- Live indicator --}}
@@ -362,20 +362,20 @@
                             {{-- Game info --}}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-sm">{{ $game->category->sport->icon }}</span>
-                                    <span class="text-sm font-semibold text-slate-200 truncate">{{ $game->category->sport->name }}</span>
+                                    <span class="text-sm">{{ $game->category?->sport?->icon ?? '' }}</span>
+                                    <span class="text-sm font-semibold text-slate-200 truncate">{{ $game->category?->sport?->name ?? '' }}</span>
                                     <span class="text-xs text-slate-500">&middot;</span>
-                                    <span class="text-xs text-slate-400 truncate">{{ $game->category->name }}</span>
+                                    <span class="text-xs text-slate-400 truncate">{{ $game->category?->name ?? '' }}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 mt-1">
                                     @if($game->event_title)
                                     <span class="text-xs font-semibold text-slate-200">{{ $game->event_title }}</span>
                                     @else
-                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamHome->color_hex }}"></span>
-                                    <span class="text-xs font-medium" style="color: {{ $game->teamHome->color_hex }}">{{ $game->teamHome->name }}</span>
+                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}"></span>
+                                    <span class="text-xs font-medium" style="color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}">{{ $game->teamHome?->name ?? 'TBD' }}</span>
                                     <span class="text-xs text-slate-600 font-bold">VS</span>
-                                    <span class="text-xs font-medium" style="color: {{ $game->teamAway->color_hex }}">{{ $game->teamAway->name }}</span>
-                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamAway->color_hex }}"></span>
+                                    <span class="text-xs font-medium" style="color: {{ $game->teamAway?->color_hex ?? '#94a3b8' }}">{{ $game->teamAway?->name ?? 'TBD' }}</span>
+                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamAway?->color_hex ?? '#94a3b8' }}"></span>
                                     @endif
                                 </div>
                                 @if($game->location)
