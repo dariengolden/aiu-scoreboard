@@ -755,7 +755,13 @@
     }
 
     updateFilterUI();
-    if (Object.keys(initialGamesByDate).length > 0) {
+    
+    const isMobile = window.innerWidth < 768;
+    if (isMobile && currentStatuses.length === 0) {
+        currentStatuses = ['upcoming', 'live'];
+        updateFilterUI();
+        fetchFilteredGames();
+    } else if (Object.keys(initialGamesByDate).length > 0) {
         renderGames(initialGamesByDate);
     }
 })();
