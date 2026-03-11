@@ -23,7 +23,10 @@ class GameController extends Controller
             ->where('category_id', $categoryModel->id)
             ->where(function ($q) use ($match) {
                 $q->where('match_number', $match)
-                    ->orWhere('id', $match);
+                    ->orWhere(function ($q2) use ($match) {
+                        $q2->whereNull('match_number')
+                            ->where('id', $match);
+                    });
             })
             ->firstOrFail();
 
@@ -77,12 +80,12 @@ class GameController extends Controller
             // Auto-determine winner from scores when completed
             $validated['winner_id'] = null;
             if ($validated['status'] === 'completed' && isset($validated['score_home']) && isset($validated['score_away'])) {
-            if ($validated['score_home'] > $validated['score_away']) {
-                $validated['winner_id'] = $game->team_home_id;
-            } elseif ($validated['score_away'] > $validated['score_home']) {
-                $validated['winner_id'] = $game->team_away_id;
-            }
-            // Draw: winner_id stays null
+                if ($validated['score_home'] > $validated['score_away']) {
+                    $validated['winner_id'] = $game->team_home_id;
+                } elseif ($validated['score_away'] > $validated['score_home']) {
+                    $validated['winner_id'] = $game->team_away_id;
+                }
+                // Draw: winner_id stays null
             }
         }
 
