@@ -7,6 +7,8 @@
     $sportConfig = $game->sport_config;
     $sportType = $sportConfig['type'] ?? null;
     $gameData = $game->game_data ?? [];
+    $places = $gameData['places'] ?? [];
+    $isRunning = $sportType === 'places';
     $isLive = $game->isLiveOrEventLive();
     $matchParam = $game->match_number ?? $game->id;
     $isCeremony = !empty($game->event_type);
@@ -59,11 +61,11 @@
        data-game-id="{{ $game->id }}"
        data-is-live="{{ $isLive ? '1' : '0' }}"
        data-period-labels='@json($game->period_labels ?? [])'
-       data-home-name="{{ $homeTeam->name }}"
-       data-away-name="{{ $awayTeam->name }}"
-       data-home-color="{{ $homeTeam->color_hex }}"
-       data-away-color="{{ $awayTeam->color_hex }}"
-       aria-label="{{ $homeTeam->name }} vs {{ $awayTeam->name }} - {{ $game->match_label }}">
+       data-home-name="{{ $isRunning ? '' : ($homeTeam?->name ?? '') }}"
+       data-away-name="{{ $isRunning ? '' : ($awayTeam?->name ?? '') }}"
+       data-home-color="{{ $isRunning ? '#6b7280' : ($homeTeam?->color_hex ?? '#6b7280') }}"
+       data-away-color="{{ $isRunning ? '#6b7280' : ($awayTeam?->color_hex ?? '#6b7280') }}"
+       aria-label="{{ $isRunning ? 'Running - ' . $game->category->name : ($homeTeam?->name ?? '') . ' vs ' . ($awayTeam?->name ?? '') }} - {{ $game->match_label }}">
 
         {{-- Sport + Category + Status header --}}
         <div class="px-4 pt-3 pb-2">
@@ -83,20 +85,43 @@
             </div>
         </div>
 
-        {{-- Teams + Score --}}
+        {{-- Teams + Score (or Places for Running) --}}
         <div class="px-4 pb-3">
+            @if($isRunning)
+                {{-- Running: Show places 1st-4th --}}
+                @for($i = 1; $i <= 4; $i++)
+                @php $placeTeamId = $places[$i] ?? null; @endphp
+                @php $placeTeam = $placeTeamId ? App\Models\Team::find($placeTeamId) : null; @endphp
+                <div class="flex items-center justify-between py-1.5">
+                    <div class="flex items-center gap-2 min-w-0">
+                        @if($i === 1)
+                            <span class="text-sm">🥇</span>
+                        @elseif($i === 2)
+                            <span class="text-sm">🥈</span>
+                        @elseif($i === 3)
+                            <span class="text-sm">🥉</span>
+                        @else
+                            <span class="text-sm text-slate-500">4th</span>
+                        @endif
+                        <span class="font-semibold text-sm truncate {{ $placeTeam ? 'text-white' : 'text-slate-500' }}">
+                            {{ $placeTeam?->name ?? '—' }}
+                        </span>
+                    </div>
+                </div>
+                @endfor
+            @else
             {{-- Home team --}}
             <div class="flex items-center justify-between py-1.5">
                 <div class="flex items-center gap-2 min-w-0">
-                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: {{ $homeTeam->color_hex }}"></span>
-                    <span class="font-semibold text-sm truncate {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-300' }}">
-                        {{ $homeTeam->name }}
+                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: {{ $homeTeam?->color_hex ?? '#6b7280' }}"></span>
+                    <span class="font-semibold text-sm truncate {{ $game->winner_id === $homeTeam?->id ? 'text-white' : 'text-slate-300' }}">
+                        {{ $homeTeam?->name ?? '—' }}
                     </span>
-                    @if($game->winner_id === $homeTeam->id)
+                    @if($game->winner_id === $homeTeam?->id)
                         <svg class="w-3.5 h-3.5 text-yellow-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     @endif
                 </div>
-                <span class="game-card-score-home text-lg font-bold tabular-nums {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-400' }}">
+                <span class="game-card-score-home text-lg font-bold tabular-nums {{ $game->winner_id === $homeTeam?->id ? 'text-white' : 'text-slate-400' }}">
                     {{ $game->score_home ?? '—' }}
                 </span>
             </div>
@@ -106,18 +131,19 @@
             {{-- Away team --}}
             <div class="flex items-center justify-between py-1.5">
                 <div class="flex items-center gap-2 min-w-0">
-                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: {{ $awayTeam->color_hex }}"></span>
-                    <span class="font-semibold text-sm truncate {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-300' }}">
-                        {{ $awayTeam->name }}
+                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: {{ $awayTeam?->color_hex ?? '#6b7280' }}"></span>
+                    <span class="font-semibold text-sm truncate {{ $game->winner_id === $awayTeam?->id ? 'text-white' : 'text-slate-300' }}">
+                        {{ $awayTeam?->name ?? '—' }}
                     </span>
-                    @if($game->winner_id === $awayTeam->id)
+                    @if($game->winner_id === $awayTeam?->id)
                         <svg class="w-3.5 h-3.5 text-yellow-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     @endif
                 </div>
-                <span class="game-card-score-away text-lg font-bold tabular-nums {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-400' }}">
+                <span class="game-card-score-away text-lg font-bold tabular-nums {{ $game->winner_id === $awayTeam?->id ? 'text-white' : 'text-slate-400' }}">
                     {{ $game->score_away ?? '—' }}
                 </span>
             </div>
+            @endif
 
             {{-- Period/Set breakdown --}}
             @if($gameData && ($sportType === 'sets' || $sportType === 'quarters' || $sportType === 'halves'))

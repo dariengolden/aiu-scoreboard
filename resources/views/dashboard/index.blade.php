@@ -4,6 +4,12 @@
 
 @section('content')
 
+@php
+function getTeam($id) {
+    return $id ? App\Models\Team::find($id) : null;
+}
+@endphp
+
 {{-- Stats bar --}}
 <div class="grid grid-cols-3 gap-3 mb-8">
     <div class="bg-[#1e293b] rounded-2xl p-4 border border-white/5 text-center">
@@ -38,13 +44,25 @@
                     @endif
                 </div>
                 <div class="flex items-center gap-2">
-                    <x-team-badge :team="$game->teamHome" size="sm" />
-                    @if($game->score_home !== null && $game->score_away !== null)
-                    <span class="text-sm font-black text-white tabular-nums">{{ $game->score_home }}&ndash;{{ $game->score_away }}</span>
+                    @php $sportType = $game->sport_config['type'] ?? null; @endphp
+                    @if($sportType === 'places')
+                        @php $places = $game->game_data['places'] ?? []; @endphp
+                        <span class="text-xs text-slate-400">🥇 {{ getTeam($places[1] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">🥈 {{ getTeam($places[2] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">🥉 {{ getTeam($places[3] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">4th {{ getTeam($places[4] ?? null)?->name ?? '—' }}</span>
                     @else
-                    <span class="text-slate-500 text-xs">vs</span>
+                        <x-team-badge :team="$game->teamHome" size="sm" />
+                        @if($game->score_home !== null && $game->score_away !== null)
+                        <span class="text-sm font-black text-white tabular-nums">{{ $game->score_home }}&ndash;{{ $game->score_away }}</span>
+                        @else
+                        <span class="text-slate-500 text-xs">vs</span>
+                        @endif
+                        <x-team-badge :team="$game->teamAway" size="sm" />
                     @endif
-                    <x-team-badge :team="$game->teamAway" size="sm" />
                 </div>
             </div>
             <a href="{{ route('games.edit', $game) }}"
@@ -100,13 +118,25 @@
 
                 {{-- Teams --}}
                 <div class="flex-1 flex items-center gap-2 min-w-0">
-                    <x-team-badge :team="$game->teamHome" size="sm" />
-                    @if($game->score_home !== null && $game->score_away !== null)
-                    <span class="text-sm font-black text-white tabular-nums">{{ $game->score_home }}&ndash;{{ $game->score_away }}</span>
+                    @php $sportType = $game->sport_config['type'] ?? null; @endphp
+                    @if($sportType === 'places')
+                        @php $places = $game->game_data['places'] ?? []; @endphp
+                        <span class="text-xs text-slate-400">🥇 {{ getTeam($places[1] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">🥈 {{ getTeam($places[2] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">🥉 {{ getTeam($places[3] ?? null)?->name ?? '—' }}</span>
+                        <span class="text-xs text-slate-500">|</span>
+                        <span class="text-xs text-slate-400">4th {{ getTeam($places[4] ?? null)?->name ?? '—' }}</span>
                     @else
-                    <span class="text-slate-600 text-xs font-bold">vs</span>
+                        <x-team-badge :team="$game->teamHome" size="sm" />
+                        @if($game->score_home !== null && $game->score_away !== null)
+                        <span class="text-sm font-black text-white tabular-nums">{{ $game->score_home }}&ndash;{{ $game->score_away }}</span>
+                        @else
+                        <span class="text-slate-600 text-xs font-bold">vs</span>
+                        @endif
+                        <x-team-badge :team="$game->teamAway" size="sm" />
                     @endif
-                    <x-team-badge :team="$game->teamAway" size="sm" />
                 </div>
 
                 {{-- Status + edit --}}

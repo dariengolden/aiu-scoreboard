@@ -310,8 +310,8 @@ class GameSeeder extends Seeder
                     'match_number' => $nextMatch($category->id),
                 ],
                 [
-                    'team_home_id' => $teams['Red'],
-                    'team_away_id' => $teams['Purple'],
+                    'team_home_id' => null,
+                    'team_away_id' => null,
                     'status' => 'upcoming',
                     'scheduled_at' => (function () use ($event) {
                         [$h, $m] = explode(':', $event[1]);
@@ -319,7 +319,7 @@ class GameSeeder extends Seeder
                         return Carbon::create(2026, 3, 22, (int) $h, (int) $m, 0, 'Asia/Bangkok');
                     })(),
                     'location' => 'Track',
-                    'notes' => 'All 4 teams compete — not a head-to-head match.',
+                    'notes' => 'All 4 teams compete — assign places 1st-4th after race.',
                 ]
             );
         }

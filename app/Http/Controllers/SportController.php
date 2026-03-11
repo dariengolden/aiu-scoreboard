@@ -16,7 +16,152 @@ class SportController extends Controller
             return Sport::orderBy('order')->with('categories')->where('slug', '!=', 'events')->get();
         });
 
-        return view('scores.index', compact('sports'));
+        $teams = cache()->remember('all_teams_with_stats', 300, function () use ($sports) {
+            $allTeams = Team::orderBy('name')->get();
+            $teamStats = [];
+
+            foreach ($allTeams as $team) {
+                $sportStats = [];
+
+                foreach ($sports as $sport) {
+                    $games = Game::where('status', 'completed')
+                        ->where(function ($query) use ($team) {
+                            $query->where('team_home_id', $team->id)
+                                ->orWhere('team_away_id', $team->id);
+                        })
+                        ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
+                        ->get();
+
+                    if ($games->isEmpty()) {
+                        $sportStats[$sport->id] = [
+                            'sport' => $sport,
+                            'stats' => [
+                                'played' => 0,
+                                'won' => 0,
+                                'drawn' => 0,
+                                'lost' => 0,
+                                'goals_for' => 0,
+                                'goals_against' => 0,
+                                'goal_difference' => 0,
+                                'points' => 0,
+                            ],
+                        ];
+                    } else {
+                        $stats = $this->computeTeamStats($games, $team);
+                        $sportStats[$sport->id] = [
+                            'sport' => $sport,
+                            'stats' => $stats,
+                        ];
+                    }
+                }
+
+                $teamStats[] = [
+                    'team' => $team,
+                    'sportStats' => $sportStats,
+                ];
+            }
+
+            return $teamStats;
+        });
+
+        return view('scores.index', compact('sports', 'teams'));
+    }
+
+    public function team(Team $team): View
+    {
+        $sports = cache()->remember('scores_sports_with_categories', 600, function () {
+            return Sport::orderBy('order')->with('categories')->where('slug', '!=', 'events')->get();
+        });
+
+        $categoryStats = [];
+        foreach ($sports as $sport) {
+            $categories = $sport->categories()->get();
+
+            foreach ($categories as $category) {
+                $allGames = Game::where('category_id', $category->id)->get();
+                $teamGames = $allGames->filter(function ($game) use ($team) {
+                    return $game->team_home_id === $team->id || $game->team_away_id === $team->id;
+                });
+
+                $completedGames = $teamGames->where('status', 'completed');
+
+                $stats = $this->computeTeamStats($completedGames, $team);
+
+                $teamIds = $allGames->pluck('team_home_id')->merge($allGames->pluck('team_away_id'))->unique()->filter();
+                $teams = $teamIds->isNotEmpty()
+                    ? Team::whereIn('id', $teamIds)->orderBy('name')->get()->keyBy('id')
+                    : collect();
+
+                $standings = $this->computeStandings($allGames->where('status', 'completed'), $teams);
+
+                $teamPosition = null;
+                if ($stats['played'] > 0) {
+                    foreach ($standings as $index => $row) {
+                        if ($row['team']->id === $team->id) {
+                            $teamPosition = $index + 1;
+                            break;
+                        }
+                    }
+                }
+
+                $categoryStats[] = [
+                    'sport' => $sport,
+                    'category' => $category,
+                    'stats' => $stats,
+                    'teamPosition' => $teamPosition,
+                    'standings' => $standings,
+                    'totalGames' => $allGames->count(),
+                    'playedGames' => $teamGames->where('status', 'completed')->count(),
+                ];
+            }
+        }
+
+        return view('scores.team', compact('team', 'categoryStats'));
+    }
+
+    private function computeTeamStats($games, $team): array
+    {
+        $played = 0;
+        $won = 0;
+        $drawn = 0;
+        $lost = 0;
+        $points = 0;
+        $goalsFor = 0;
+        $goalsAgainst = 0;
+
+        foreach ($games as $game) {
+            $isHome = $game->team_home_id === $team->id;
+            $scoreTeam = $isHome ? $game->score_home : $game->score_away;
+            $scoreOpponent = $isHome ? $game->score_away : $game->score_home;
+
+            $scoreTeam = $scoreTeam ?? 0;
+            $scoreOpponent = $scoreOpponent ?? 0;
+
+            $played++;
+            $goalsFor += $scoreTeam;
+            $goalsAgainst += $scoreOpponent;
+
+            if ($scoreTeam > $scoreOpponent) {
+                $won++;
+                $points += 3;
+            } elseif ($scoreTeam === $scoreOpponent) {
+                $drawn++;
+                $points += 1;
+            } else {
+                $lost++;
+            }
+        }
+
+        return [
+            'played' => $played,
+            'won' => $won,
+            'drawn' => $drawn,
+            'lost' => $lost,
+            'goals_for' => $goalsFor,
+            'goals_against' => $goalsAgainst,
+            'goal_difference' => $goalsFor - $goalsAgainst,
+            'points' => $points,
+        ];
     }
 
     public function show(Request $request, Sport $sport): View
@@ -38,16 +183,16 @@ class SportController extends Controller
 
         $games = cache()->remember($cacheKey, 30, function () use ($sport, $selectedCategory) {
             $gamesQuery = Game::select([
-                    'id',
-                    'category_id',
-                    'team_home_id',
-                    'team_away_id',
-                    'score_home',
-                    'score_away',
-                    'status',
-                    'winner_id',
-                    'match_number',
-                ])
+                'id',
+                'category_id',
+                'team_home_id',
+                'team_away_id',
+                'score_home',
+                'score_away',
+                'status',
+                'winner_id',
+                'match_number',
+            ])
                 ->with(['teamHome', 'teamAway', 'winner', 'category'])
                 ->whereNull('event_type')
                 ->whereHas('category', fn ($q) => $q->where('sport_id', $sport->id))
@@ -80,7 +225,16 @@ class SportController extends Controller
         $standingsByCategory = [];
         foreach ($visibleCategories as $category) {
             $categoryGames = $games[$category->id] ?? collect();
-            $standingsByCategory[$category->id] = $this->computeStandings($categoryGames, $teams);
+
+            $categoryTeamIds = $categoryGames->pluck('team_home_id')
+                ->merge($categoryGames->pluck('team_away_id'))
+                ->unique()
+                ->filter();
+            $categoryTeams = $categoryTeamIds->isNotEmpty()
+                ? Team::whereIn('id', $categoryTeamIds)->orderBy('name')->get()->keyBy('id')
+                : collect();
+
+            $standingsByCategory[$category->id] = $this->computeStandings($categoryGames, $categoryTeams);
         }
 
         return view('scores.show', compact('sport', 'selectedCategory', 'standingsByCategory', 'visibleCategories', 'games', 'categories'));

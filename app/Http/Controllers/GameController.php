@@ -91,6 +91,24 @@ class GameController extends Controller
 
         $game->update($validated);
 
+        // Handle places for running (type: places)
+        if ($game->sport_slug === 'running') {
+            if ($request->has('clear_places')) {
+                // Clear places
+                $gameData = $game->game_data ?? [];
+                unset($gameData['places']);
+                $game->game_data = $gameData;
+                $game->save();
+            } elseif ($request->has('places')) {
+                // Save places
+                $places = $request->input('places', []);
+                $gameData = $game->game_data ?? [];
+                $gameData['places'] = $places;
+                $game->game_data = $gameData;
+                $game->save();
+            }
+        }
+
         return redirect()->route('dashboard')
             ->with('success', 'Game updated successfully.');
     }

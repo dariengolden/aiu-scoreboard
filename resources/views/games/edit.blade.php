@@ -40,11 +40,16 @@
             <p class="text-sm text-blue-400 font-semibold">{{ $game->match_label }}</p>
         </div>
     </div>
-    @if(!$isEvent)
+    @if(!$isEvent && $sportType !== 'places')
     <div class="flex items-center gap-3">
         <x-team-badge :team="$game->teamHome" />
         <span class="text-slate-500 text-sm font-bold">vs</span>
         <x-team-badge :team="$game->teamAway" />
+    </div>
+    @endif
+    @if(!$isEvent && $sportType === 'places')
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+        <span class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg font-medium">All 4 teams compete</span>
     </div>
     @endif
 </div>
@@ -128,10 +133,10 @@
      data-score-home="{{ $game->score_home ?? 0 }}"
      data-score-away="{{ $game->score_away ?? 0 }}"
      data-current-period="{{ $game->current_period ?? '' }}"
-     data-team-home-name="{{ $game->teamHome->name }}"
-     data-team-away-name="{{ $game->teamAway->name }}"
-     data-team-home-color="{{ $game->teamHome->color_hex }}"
-     data-team-away-color="{{ $game->teamAway->color_hex }}"
+     data-team-home-name="{{ $game->teamHome?->name ?? '' }}"
+     data-team-away-name="{{ $game->teamAway?->name ?? '' }}"
+     data-team-home-color="{{ $game->teamHome?->color_hex ?? '#6b7280' }}"
+     data-team-away-color="{{ $game->teamAway?->color_hex ?? '#6b7280' }}"
      data-update-url="{{ route('games.live-update', $game) }}"
      data-csrf-token="{{ csrf_token() }}"
      data-notes="{{ $game->notes ?? '' }}"
@@ -186,6 +191,42 @@
             </span>
         </div>
 
+        {{-- Place assignment UI for Running (type: places) --}}
+        @if($sportType === 'places')
+        <div id="places-scoring-section">
+            <p class="text-xs text-slate-400 mb-4">Assign teams to places (1st, 2nd, 3rd, 4th)</p>
+            
+            <div class="space-y-3">
+                @for($i = 1; $i <= 4; $i++)
+                <div class="flex items-center gap-3">
+                    <div class="w-16 flex-shrink-0">
+                        @if($i === 1)
+                        <span class="text-lg font-black text-yellow-400">🥇</span>
+                        @elseif($i === 2)
+                        <span class="text-lg font-black text-slate-300">🥈</span>
+                        @elseif($i === 3)
+                        <span class="text-lg font-black text-amber-600">🥉</span>
+                        @else
+                        <span class="text-lg font-black text-slate-500">{{ $i }}th</span>
+                        @endif
+                    </div>
+                    <select name="places[{{ $i }}]" id="place-{{ $i }}" 
+                            class="place-select flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Select Team --</option>
+                        @foreach($teams as $team)
+                        <option value="{{ $team->id }}" {{ (($gameData['places'][$i] ?? null) == $team->id) ? 'selected' : '' }}>
+                            {{ $team->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endfor
+            </div>
+
+            <input type="hidden" id="places-json" name="places_json" value="{{ json_encode($gameData['places'] ?? []) }}">
+        </div>
+        @else
+
         {{-- Big score display --}}
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4 mb-4">
             {{-- Home --}}
@@ -212,9 +253,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- Period/Set scoring (sport-specific) --}}
-        @if($sportType !== 'time' && $sportType !== 'simple')
+        @if($sportType !== 'time' && $sportType !== 'simple' && $sportType !== 'places')
         
         <div class="h-[1px] bg-white/5 my-5 w-full"></div>
         
@@ -507,6 +549,7 @@
         </div>
     </form>
 
+    @if($sportType !== 'places')
     {{-- Clear Scores --}}
     <form id="clear-scores-form" action="{{ route('games.update', $game) }}" method="POST" class="pb-3">
         @csrf
@@ -528,6 +571,21 @@
             Reset Match
         </button>
     </form>
+    @endif
+
+    {{-- Reset Places (for Running type) --}}
+    @if($sportType === 'places')
+    <form id="reset-places-form" action="{{ route('games.update', $game) }}" method="POST" class="pb-6">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="status" value="{{ $game->status }}">
+        <input type="hidden" name="clear_places" value="1">
+        <button type="button" id="reset-places-btn"
+                class="w-full bg-red-600/15 hover:bg-red-600/25 active:bg-red-600/35 text-red-400 font-bold py-4 rounded-xl transition-colors text-sm border border-red-500/20">
+            Reset Places
+        </button>
+    </form>
+    @endif
 </div>
 
 {{-- Confirmation Modal --}}
@@ -647,6 +705,23 @@
             clearScoresForm.submit();
         }
     });
+
+    // ── Reset Places Confirmation (Running) ─────────────────────────────────────
+    const resetPlacesBtn = document.getElementById('reset-places-btn');
+    const resetPlacesForm = document.getElementById('reset-places-form');
+
+    if (resetPlacesBtn && resetPlacesForm) {
+        resetPlacesBtn.addEventListener('click', async () => {
+            const confirmed = await showModal(
+                'Reset Places?',
+                'Are you sure you want to clear all team places? This action cannot be undone.',
+                'Reset Places'
+            );
+            if (confirmed) {
+                resetPlacesForm.submit();
+            }
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
     const app = document.getElementById('live-scoring-app');

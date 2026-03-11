@@ -108,13 +108,15 @@ class Game extends Model
             'lead_required' => 2,
         ],
         'running' => [
-            'type' => 'time',
+            'type' => 'places',
             'periods' => null,
             'period_labels' => null,
             'increments' => null,
             'increment_labels' => null,
             'has_time' => false,
             'formats' => null,
+            'places' => [1, 2, 3, 4],
+            'place_labels' => ['1st', '2nd', '3rd', '4th'],
         ],
     ];
 

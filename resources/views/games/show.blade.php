@@ -15,6 +15,12 @@
     $gameData = $game->game_data ?? [];
     $labels = $game->period_labels;
     $isCeremony = !empty($game->event_type);
+    $isRunning = $type === 'places';
+    $places = $gameData['places'] ?? [];
+
+    function getTeamShow($id) {
+        return $id ? \App\Models\Team::find($id) : null;
+    }
 
     $rows = [];
     if ($type === 'sets') {
@@ -35,7 +41,7 @@
         ($showRed && (($game->red_cards_home ?? 0) > 0 || ($game->red_cards_away ?? 0) > 0));
 @endphp
 
-<div class="max-w-5xl mx-auto px-4 py-6" data-game-id="{{ $game->id }}" data-live="{{ $game->isLive() ? '1' : '0' }}" data-period-labels='@json($labels)' data-type="{{ $type }}" data-home-color="{{ $homeTeam->color_hex }}" data-away-color="{{ $awayTeam->color_hex }}" data-home-name="{{ $homeTeam->name }}" data-away-name="{{ $awayTeam->name }}">
+<div class="max-w-5xl mx-auto px-4 py-6" data-game-id="{{ $game->id }}" data-live="{{ $game->isLive() ? '1' : '0' }}" data-period-labels='@json($labels)' data-type="{{ $type }}" data-home-color="{{ $homeTeam?->color_hex ?? '#6b7280' }}" data-away-color="{{ $awayTeam?->color_hex ?? '#6b7280' }}" data-home-name="{{ $homeTeam?->name ?? '' }}" data-away-name="{{ $awayTeam?->name ?? '' }}">
 
     {{-- Breadcrumb --}}
     <div class="flex items-center gap-2 text-sm text-slate-400 mb-6">
@@ -59,7 +65,11 @@
             @endif
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-white">
-                    {{ $homeTeam->name }} vs {{ $awayTeam->name }}
+                    @if($isRunning)
+                        {{ $category->name }} &mdash; Places
+                    @else
+                        {{ $homeTeam?->name ?? '—' }} vs {{ $awayTeam?->name ?? '—' }}
+                    @endif
                 </h1>
                 <p class="text-slate-400 text-sm mt-1">
                     {{ $sport?->name }} @if($category) &middot; {{ $category->name }} @endif
@@ -67,6 +77,14 @@
             </div>
         </div>
         <div class="flex flex-col items-start md:items-end gap-2">
+            @auth
+                <a href="{{ route('games.edit', $game) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit Match
+                </a>
+            @endauth
             @if($game->scheduled_at)
                 <div class="flex items-center gap-2 text-xs text-slate-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -129,17 +147,40 @@
                 </div>
 
                 <div class="px-6 py-6">
-                    {{-- Teams + score --}}
+                    {{-- Teams + score (or Places for Running) --}}
                     <div class="space-y-3 mb-2">
+                        @if($isRunning)
+                            {{-- Running: Show places 1st-4th --}}
+                            @for($i = 1; $i <= 4; $i++)
+                            @php $placeTeam = getTeamShow($places[$i] ?? null); @endphp
+                            <div class="flex items-center justify-between py-2 px-4 bg-white/5 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    @if($i === 1)
+                                        <span class="text-xl">🥇</span>
+                                    @elseif($i === 2)
+                                        <span class="text-xl">🥈</span>
+                                    @elseif($i === 3)
+                                        <span class="text-xl">🥉</span>
+                                    @else
+                                        <span class="text-sm font-bold text-slate-500 w-6">4th</span>
+                                    @endif
+                                    <span class="font-semibold text-base {{ $placeTeam ? 'text-white' : 'text-slate-500' }}">
+                                        {{ $placeTeam?->name ?? '—' }}
+                                    </span>
+                                </div>
+                            </div>
+                            @endfor
+                        @else
+                        {{-- Regular: Team vs Team --}}
                         {{-- Team names row --}}
                         <div class="flex items-center justify-between gap-4">
                             {{-- Home --}}
                             <div class="flex items-center gap-3 min-w-0">
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: {{ $homeTeam->color_hex }}"></span>
-                                <span class="font-semibold text-base md:text-lg truncate {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-300' }}">
-                                    {{ $homeTeam->name }}
+                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: {{ $homeTeam?->color_hex ?? '#6b7280' }}"></span>
+                                <span class="font-semibold text-base md:text-lg truncate {{ $game->winner_id === $homeTeam?->id ? 'text-white' : 'text-slate-300' }}">
+                                    {{ $homeTeam?->name ?? '—' }}
                                 </span>
-                                @if($game->winner_id === $homeTeam->id)
+                                @if($game->winner_id === $homeTeam?->id)
                                     <svg class="w-4 h-4 text-yellow-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
@@ -148,21 +189,21 @@
 
                             {{-- Away --}}
                             <div class="flex items-center gap-3 min-w-0 justify-end">
-                                @if($game->winner_id === $awayTeam->id)
+                                @if($game->winner_id === $awayTeam?->id)
                                     <svg class="w-4 h-4 text-yellow-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
                                 @endif
-                                <span class="font-semibold text-base md:text-lg truncate text-right {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-300' }}">
-                                    {{ $awayTeam->name }}
+                                <span class="font-semibold text-base md:text-lg truncate text-right {{ $game->winner_id === $awayTeam?->id ? 'text-white' : 'text-slate-300' }}">
+                                    {{ $awayTeam?->name ?? '—' }}
                                 </span>
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: {{ $awayTeam->color_hex }}"></span>
+                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: {{ $awayTeam?->color_hex ?? '#6b7280' }}"></span>
                             </div>
                         </div>
 
                         {{-- Scores row --}}
                         <div class="flex items-center justify-between gap-4">
-                            <div class="game-score-home text-3xl md:text-4xl font-black tabular-nums {{ $game->winner_id === $homeTeam->id ? 'text-white' : 'text-slate-300' }}">
+                            <div class="game-score-home text-3xl md:text-4xl font-black tabular-nums {{ $game->winner_id === $homeTeam?->id ? 'text-white' : 'text-slate-300' }}">
                                 {{ $game->score_home ?? '—' }}
                             </div>
 
@@ -170,14 +211,15 @@
                                 vs
                             </span>
 
-                            <div class="game-score-away text-3xl md:text-4xl font-black tabular-nums text-right {{ $game->winner_id === $awayTeam->id ? 'text-white' : 'text-slate-300' }}">
+                            <div class="game-score-away text-3xl md:text-4xl font-black tabular-nums text-right {{ $game->winner_id === $awayTeam?->id ? 'text-white' : 'text-slate-300' }}">
                                 {{ $game->score_away ?? '—' }}
                             </div>
                         </div>
+                        @endif
                     </div>
 
                     {{-- Draw indicator --}}
-                    @if($game->isCompleted() && $game->score_home !== null && $game->score_home === $game->score_away)
+                    @if(!$isRunning && $game->isCompleted() && $game->score_home !== null && $game->score_home === $game->score_away)
                         <div class="mt-2 text-center">
                             <span class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                 Draw
