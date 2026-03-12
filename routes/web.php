@@ -18,7 +18,7 @@ Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/api/schedule', [ScheduleController::class, 'api'])->name('schedule.api');
 // Route::get('/results', [ResultController::class, 'index'])->name('results');
 Route::get('/scores', [SportController::class, 'index'])->name('scores.index');
-Route::get('/scores/team/{team}', [SportController::class, 'team'])->name('scores.team');
+Route::get('/scores/team/{color}', [SportController::class, 'team'])->name('scores.team');
 Route::get('/scores/{sport}', [SportController::class, 'show'])->name('scores.show');
 Route::get('/scores/{sport}/{category}/match-{match}', [GameController::class, 'showByContext'])->name('games.show');
 

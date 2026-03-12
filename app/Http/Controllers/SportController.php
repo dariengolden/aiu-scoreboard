@@ -67,8 +67,9 @@ class SportController extends Controller
         return view('scores.index', compact('sports', 'teams'));
     }
 
-    public function team(Team $team): View
+    public function team(string $color): View
     {
+        $team = Team::where('name', ucfirst(strtolower($color)))->firstOrFail();
         $sports = cache()->remember('scores_sports_with_categories', 600, function () {
             return Sport::orderBy('order')->with('categories')->where('slug', '!=', 'events')->get();
         });

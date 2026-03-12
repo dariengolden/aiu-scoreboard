@@ -10,7 +10,7 @@ $abbreviations = [
 $subtitle = $abbreviations[$team->name] ?? 'View stats';
 @endphp
 
-<a href="{{ route('scores.team', $team) }}"
+<a href="{{ route('scores.team', strtolower($team->name)) }}"
    class="group block rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all active:scale-95"
    style="background-color: {{ $team->color_hex }}20; border-color: {{ $team->color_hex }}40;">
     <div class="flex items-center gap-3">
