@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        document.querySelectorAll('.hero-slide').forEach((slide, i) => {
+            slide.classList.toggle('opacity-100', i === 0);
+            slide.classList.toggle('opacity-0', i !== 0);
+        });
+    </script>
 </head>
 <body class="bg-[#0f172a] text-white min-h-screen font-sans antialiased flex flex-col">
 

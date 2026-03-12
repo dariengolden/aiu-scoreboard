@@ -123,7 +123,7 @@
                            data-filter-sport="{{ $sport->slug }}"
                            onclick="event.preventDefault(); toggleFilter('sport', '{{ $sport->slug }}')"
                            class="filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-colors {{ $isActive ? 'bg-blue-600 text-white' : 'bg-[#0f172a] text-slate-300 hover:bg-[#162033] hover:text-white' }}">
-                            {{ $sport->icon }} {{ $sport->name }}
+                            <x-sport-icon :sport="$sport" size="sm" /> {{ $sport->name }}
                         </a>
                         @endforeach
                     </div>
@@ -252,7 +252,7 @@
                        class="block border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors cursor-pointer"
                        title="{{ $game->category?->sport?->name ?? '' }} {{ $game->category?->name ?? '' }} — {{ $gameTitle }} @ {{ $game->scheduled_at?->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
                         <div class="flex items-center gap-1 min-w-0">
-                            <span class="text-[11px] shrink-0">{{ $game->category?->sport?->icon ?? '' }}</span>
+                            <x-sport-icon :sport="$game->category?->sport" size="xs" />
                             <span class="text-[11px] text-slate-400 truncate leading-tight">
                                 <span class="font-medium text-slate-300">{{ $game->scheduled_at?->format('g:ia') }}</span>
                                 {{ $game->category?->name ?? '' }}
@@ -362,7 +362,7 @@
                             {{-- Game info --}}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-sm">{{ $game->category?->sport?->icon ?? '' }}</span>
+                                    <x-sport-icon :sport="$game->category?->sport" size="sm" />
                                     <span class="text-sm font-semibold text-slate-200 truncate">{{ $game->category?->sport?->name ?? '' }}</span>
                                     <span class="text-xs text-slate-500">&middot;</span>
                                     <span class="text-xs text-slate-400 truncate">{{ $game->category?->name ?? '' }}</span>
@@ -406,6 +406,11 @@
     @endif
     </div>
 </div>
+
+{{-- Back to Top Button --}}
+<button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-28 md:bottom-6 md:right-6 right-4 z-50 p-3 rounded-full bg-slate-200 text-slate-900 shadow-lg transition-all duration-300 hover:bg-white" style="display: none;">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
 
 {{-- Game Preview Modal --}}
 <div id="game-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
@@ -482,6 +487,7 @@
     const calendarStart = '{{ $calendarStart->format("Y-m-d") }}';
     const calendarEnd = '{{ $calendarEnd->format("Y-m-d") }}';
     const sportsData = @json($sports->map(fn($s) => ['slug' => $s->slug, 'name' => $s->name, 'icon' => $s->icon]));
+    const customIconSlugs = ['takraw'];
     const teamsData = @json($teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'colorHex' => $t->color_hex]));
     const initialGamesByDate = @json($gamesByDateResource ?? []);
 
@@ -492,8 +498,17 @@
         const modalPanel = document.getElementById('game-modal-panel');
 
         // Sport & category
-        document.getElementById('modal-sport-category').textContent =
-            (link.dataset.sportIcon || '') + ' ' + (link.dataset.sportName || '') + ' — ' + (link.dataset.categoryName || '');
+        const sportIcon = link.dataset.sportIcon || '';
+        const sportName = link.dataset.sportName || '';
+        const categoryName = link.dataset.categoryName || '';
+        const sportDataMatch = sportsData.find(s => s.name.toLowerCase() === sportName.toLowerCase());
+        const sportSlug = sportDataMatch ? sportDataMatch.slug : '';
+        const modalSportCategory = document.getElementById('modal-sport-category');
+        if (customIconSlugs.includes(sportSlug)) {
+            modalSportCategory.innerHTML = `<img src="/images/${sportSlug}-icon.svg" class="w-3.5 h-3.5 object-contain inline" alt="" /> ${sportName} — ${categoryName}`;
+        } else {
+            modalSportCategory.innerHTML = `<span class="text-sm">${sportIcon}</span> ${sportName} — ${categoryName}`;
+        }
 
         // Match label
         document.getElementById('modal-match-label').textContent = link.dataset.matchLabel || '';
@@ -609,6 +624,15 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeGameModal();
+    });
+
+    const backToTopBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+            backToTopBtn.style.display = 'block';
+        } else {
+            backToTopBtn.style.display = 'none';
+        }
     });
 
     function updateFilterUI() {
@@ -806,7 +830,7 @@
                             class="block border-l-2 ${statusColor} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors cursor-pointer"
                             title="${game.category.sport.name} ${game.category.name} — ${gameTitle} @ ${gameTime}${game.location ? ' · ' + game.location : ''}">
                             <div class="flex items-center gap-1 min-w-0">
-                                <span class="text-[11px] shrink-0">${game.category.sport.icon}</span>
+                                ${customIconSlugs.includes(game.category.sport.slug) ? `<img src="/images/${game.category.sport.slug}-icon.svg" class="w-2.5 h-2.5 object-contain inline" alt="" />` : `<span class="text-[11px] shrink-0">${game.category.sport.icon}</span>`}
                                 <span class="text-[11px] text-slate-400 truncate leading-tight">
                                     <span class="font-medium text-slate-300">${gameTime}</span> ${game.category.name}
                                 </span>
@@ -881,7 +905,7 @@
                             ${game.status === 'in_progress' ? '<div class="shrink-0 mt-1.5"><span class="block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span></div>' : ''}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-sm">${game.category.sport.icon}</span>
+                                    ${customIconSlugs.includes(game.category.sport.slug) ? `<img src="/images/${game.category.sport.slug}-icon.svg" class="w-3.5 h-3.5 object-contain inline" alt="" />` : `<span class="text-sm">${game.category.sport.icon}</span>`}
                                     <span class="text-sm font-semibold text-slate-200 truncate">${game.category.sport.name}</span>
                                     <span class="text-xs text-slate-500">&middot;</span>
                                     <span class="text-xs text-slate-400 truncate">${game.category.name}</span>

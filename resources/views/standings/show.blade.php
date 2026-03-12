@@ -18,7 +18,7 @@
     {{-- Header --}}
     <div class="mb-8">
         <div class="flex items-center gap-3 mb-1">
-            <span class="text-4xl">{{ $sport->icon }}</span>
+            <x-sport-icon :sport="$sport" size="xl" />
             <div>
                 <h1 class="text-2xl font-black text-white">{{ $sport->name }}</h1>
                 <p class="text-blue-400 font-semibold">{{ $category->name }} — Round Robin</p>

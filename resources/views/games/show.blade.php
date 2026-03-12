@@ -61,7 +61,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div class="flex items-center gap-4">
             @if($sport)
-                <span class="text-4xl md:text-5xl">{{ $sport->icon }}</span>
+                <x-sport-icon :sport="$sport" size="xl" />
             @endif
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-white">

@@ -28,7 +28,7 @@
 {{-- Game/Event header --}}
 <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 mb-6">
     <div class="flex items-center gap-3 mb-3">
-        <span class="text-3xl">{{ $game->category->sport->icon ?? '🎉' }}</span>
+        <x-sport-icon :sport="$game->category->sport" size="lg" />
         <div>
             <h1 class="text-lg font-black text-white">
                 @if($isEvent)

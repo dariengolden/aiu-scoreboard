@@ -237,7 +237,7 @@ class GameController extends Controller
             'id' => $game->id,
             'score_home' => $game->score_home,
             'score_away' => $game->score_away,
-            'game_data' => $game->game_data,
+            'game_data' => $gameData ?? [],
             'game_format' => $game->game_format,
             'current_period' => $game->current_period,
             'status' => $game->status,
@@ -277,8 +277,9 @@ class GameController extends Controller
 
         $result = [];
         foreach ($games as $game) {
+            $gameData = $game->game_data;
             $currentPeriod = $game->current_period;
-            if (($game->game_data['halftime'] ?? false) && $game->sport_slug === 'basketball') {
+            if (($gameData['halftime'] ?? false) && $game->sport_slug === 'basketball') {
                 $currentPeriod = 'Halftime';
             }
             $result[$game->id] = [
@@ -291,8 +292,8 @@ class GameController extends Controller
                 'status' => $game->status,
                 'status_label' => $game->status_label,
                 'winner_id' => $game->winner_id,
-                'team_home_name' => $game->teamHome->name,
-                'team_away_name' => $game->teamAway->name,
+                'team_home_name' => $game->teamHome?->name,
+                'team_away_name' => $game->teamAway?->name,
                 'updated_at' => $game->updated_at->toISOString(),
             ];
         }

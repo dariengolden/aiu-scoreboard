@@ -90,7 +90,7 @@ function getTeam($id) {
             <button type="button"
                     data-sport-filter="{{ $sport->slug }}"
                     class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-[#0f172a] text-slate-300 hover:bg-[#162033] hover:text-white border border-white/5">
-                {{ $sport->icon }} {{ $sport->name }}
+                <x-sport-icon :sport="$sport" size="sm" /> {{ $sport->name }}
             </button>
             @endforeach
         </div>
@@ -102,7 +102,7 @@ function getTeam($id) {
 @foreach($sports as $sport)
 <div class="mb-8" data-sport-section="{{ $sport->slug }}">
     <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-        <span>{{ $sport->icon }}</span> {{ $sport->name }}
+        <x-sport-icon :sport="$sport" size="md" /> {{ $sport->name }}
     </h2>
 
     @foreach($sport->categories as $category)

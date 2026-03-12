@@ -27,7 +27,7 @@ function getTeamResult($id) {
         @foreach($sports as $sport)
         <a href="{{ route('results', ['sport' => $sport->slug]) }}"
            class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors {{ $selectedSport == $sport->slug ? 'bg-blue-600 text-white' : 'bg-[#1e293b] text-slate-300 hover:bg-[#243044] hover:text-white' }}">
-            {{ $sport->icon }} {{ $sport->name }}
+            <x-sport-icon :sport="$sport" size="sm" /> {{ $sport->name }}
         </a>
         @endforeach
     </div>
@@ -46,7 +46,7 @@ function getTeamResult($id) {
             {{-- Top info bar --}}
             <div class="px-4 pt-3 pb-2 flex items-center justify-between">
                 <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-base">{{ $game->category->sport->icon }}</span>
+                    <x-sport-icon :sport="$game->category->sport" size="md" />
                     <span class="text-sm text-slate-300 font-medium truncate">{{ $game->category->sport->name }} &middot; {{ $game->category->name }}</span>
                     <span class="text-xs text-slate-500 shrink-0">&middot; {{ $game->match_label }}</span>
                 </div>

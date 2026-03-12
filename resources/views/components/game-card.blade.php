@@ -22,7 +22,7 @@
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs font-medium text-slate-400">
                     @if($game->category && $game->category->sport)
-                        {{ $game->category->sport->icon ?? '' }} {{ $game->category->sport->name }} &mdash; {{ $game->category->name }}
+                        <x-sport-icon :sport="$game->category->sport" size="xs" /> {{ $game->category->sport->name }} &mdash; {{ $game->category->name }}
                     @endif
                 </span>
                 <x-status-badge :status="$game->status" />
@@ -72,7 +72,7 @@
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs font-medium text-slate-400">
                     @if($game->category && $game->category->sport)
-                        {{ $game->category->sport->icon ?? '' }} {{ $game->category->sport->name }} &mdash; {{ $game->category->name }}
+                        <x-sport-icon :sport="$game->category->sport" size="xs" /> {{ $game->category->sport->name }} &mdash; {{ $game->category->name }}
                     @endif
                 </span>
                 <x-status-badge :status="$game->status" />

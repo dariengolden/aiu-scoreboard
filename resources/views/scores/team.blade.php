@@ -49,7 +49,7 @@
                     <tr class="border-b border-white/5 last:border-b-0 hover:bg-white/5">
                         <td class="px-4 py-3">
                             <a href="{{ route('scores.show', $item['sport']) }}" class="flex items-center gap-2 hover:text-blue-400 transition-colors">
-                                <span class="text-lg">{{ $item['sport']->icon }}</span>
+                                <x-sport-icon :sport="$item['sport']" size="md" />
                                 <span class="font-semibold text-white">{{ $item['sport']->name }}</span>
                             </a>
                         </td>

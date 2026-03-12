@@ -15,7 +15,7 @@
 
     {{-- Sport header --}}
     <div class="flex items-center gap-4 mb-6">
-        <span class="text-5xl">{{ $sport->icon }}</span>
+        <x-sport-icon :sport="$sport" size="xl" />
         <div>
             <h1 class="text-3xl font-black text-white">{{ $sport->name }}</h1>
             <p class="text-slate-400 text-sm mt-1">{{ $categories->count() }} {{ Str::plural('category', $categories->count()) }} &middot; Round Robin</p>
