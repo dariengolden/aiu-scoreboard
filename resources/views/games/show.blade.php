@@ -132,7 +132,7 @@
                 <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                         {{ $game->match_label }}
-                        <span class="game-current-period ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[11px] font-bold {{ !$game->current_period ? 'hidden' : '' }}">{{ $game->current_period ?? '' }}</span>
+                        <span class="game-current-period ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[11px] font-bold {{ !$game->current_period || $game->isCompleted() ? 'hidden' : '' }}">{{ $game->current_period ?? '' }}</span>
                     </div>
                     @if($game->isLive())
                         <span class="game-status-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500 text-white text-[11px] font-bold uppercase tracking-wider">
@@ -244,6 +244,15 @@
                                 Score breakdown
                             @endif
                         </h2>
+                        <span class="text-xs font-semibold text-slate-500">
+                            @if($type === 'sets')
+                                BEST OF {{ count($labels) }}
+                            @elseif($type === 'quarters')
+                                {{ count($labels) }} Quarters
+                            @elseif($type === 'halves')
+                                {{ count($labels) }} Halves
+                            @endif
+                        </span>
                     </div>
 
                     <div class="px-4 pt-5 pb-4 space-y-4">

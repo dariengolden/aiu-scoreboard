@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sport extends Model
 {
-    protected $fillable = ['name', 'slug', 'icon', 'order'];
+    protected $fillable = ['name', 'slug', 'icon', 'order', 'description', 'standings_description'];
 
     /**
      * Get the route key name for model binding.

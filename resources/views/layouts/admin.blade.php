@@ -26,8 +26,12 @@
                 <span class="hidden sm:block text-sm text-slate-400">{{ auth()->user()->name }}</span>
                 @if(auth()->user()->isAdmin())
                 <a href="{{ route('admin.users.index') }}"
-                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
                     Users
+                </a>
+                <a href="{{ route('admin.sports.index') }}"
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                    Sports
                 </a>
                 @endif
                 <a href="{{ route('dashboard') }}"
@@ -81,9 +85,14 @@
             </a>
             @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.users.index') }}"
-               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.*') ? 'text-blue-400' : 'text-slate-400' }}">
+               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'text-blue-400' : 'text-slate-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Users
+            </a>
+            <a href="{{ route('admin.sports.index') }}"
+               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'text-blue-400' : 'text-slate-400' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Sports
             </a>
             @endif
             <a href="{{ route('home') }}"

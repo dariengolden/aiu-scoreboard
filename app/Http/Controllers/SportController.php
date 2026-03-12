@@ -315,4 +315,27 @@ class SportController extends Controller
 
         return $stats;
     }
+
+    public function adminIndex(): View
+    {
+        $sports = Sport::orderBy('order')->get();
+
+        return view('admin.sports.index', compact('sports'));
+    }
+
+    public function adminEdit(Sport $sport): View
+    {
+        return view('admin.sports.edit', compact('sport'));
+    }
+
+    public function adminUpdate(Request $request, Sport $sport)
+    {
+        $validated = $request->validate([
+            'description' => 'nullable|string',
+        ]);
+
+        $sport->update($validated);
+
+        return redirect()->route('admin.sports.index')->with('success', 'Sport updated successfully.');
+    }
 }

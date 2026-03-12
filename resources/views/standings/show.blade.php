@@ -39,7 +39,35 @@
     {{-- Standings Table --}}
     <div class="bg-[#1e293b] rounded-2xl border border-white/5 overflow-hidden mb-8">
         <div class="px-4 py-3 border-b border-white/5">
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Standings</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Standings</h2>
+                @if($sport->description)
+                    <div class="relative">
+                        <button type="button"
+                                onclick="document.getElementById('standings-info-popup').classList.toggle('hidden')"
+                                class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                aria-label="View information">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+
+                        <div id="standings-info-popup" class="hidden absolute top-full right-0 mt-2 z-50 p-0 rounded-2xl shadow-2xl shadow-black/60 bg-[#1e293b] border border-white/10 w-64">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-bold text-white text-sm">INFORMATION</span>
+                                    <button onclick="document.getElementById('standings-info-popup').classList.add('hidden')" class="text-slate-400 hover:text-white transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-slate-300 leading-relaxed prose prose-invert prose-sm">{!! $sport->description !!}</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">

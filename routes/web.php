@@ -47,5 +47,8 @@ Route::middleware('auth')->group(function () {
     // ── Admin-only routes ────────────────────────────────────────────────────
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
+        Route::get('sports', [SportController::class, 'adminIndex'])->name('sports.index');
+        Route::get('sports/{sport}/edit', [SportController::class, 'adminEdit'])->name('sports.edit');
+        Route::put('sports/{sport}', [SportController::class, 'adminUpdate'])->name('sports.update');
     });
 });

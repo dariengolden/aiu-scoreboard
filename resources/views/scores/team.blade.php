@@ -18,7 +18,18 @@
         <span class="w-8 h-8 rounded-full" style="background-color: {{ $team->color_hex }}"></span>
         <div>
             <h1 class="text-3xl font-black text-white">{{ $team->name }}</h1>
-            <p class="text-slate-400 text-sm mt-1">{{ count($categoryStats) }} {{ Str::plural('category', count($categoryStats)) }}</p>
+            <p class="text-slate-400 text-sm mt-1">
+                @php
+                    $faculties = match($team->color_hex) {
+                        '#3B82F6' => 'Faculty of Religious Studies (FRS), Mission Faculty of Nursing (MFON)',
+                        '#EF4444' => 'Faculty of Education (FOS), Faculty of Science (FOS)',
+                        '#EC4899' => 'Faculty of Arts & Humanities (FAH)',
+                        '#A855F7' => 'Faculty of Business Administration (FBA), Faculty of Information Technology (FIT)',
+                        default => '',
+                    };
+                @endphp
+                {{ $faculties }}
+            </p>
         </div>
     </div>
 
