@@ -15,7 +15,7 @@
 
     {{-- Team header --}}
     <div class="flex items-center gap-4 mb-8">
-        <span class="w-8 h-8 rounded-full" style="background-color: {{ $team->color_hex }}"></span>
+        <span class="w-8 h-8 rounded-full flex-shrink-0" style="background-color: {{ $team->color_hex }}"></span>
         <div>
             <h1 class="text-3xl font-black text-white">{{ $team->name }}</h1>
             <p class="text-slate-400 text-sm mt-1">
