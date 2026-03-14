@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/games/{game}', [GameController::class, 'update'])->name('games.update');
     Route::patch('/games/{game}/live', [GameController::class, 'liveUpdate'])->name('games.live-update');
     Route::post('/games/{game}/reset', [GameController::class, 'reset'])->name('games.reset');
+    Route::put('/games/{game}/disqualify', [GameController::class, 'disqualify'])->name('games.disqualify');
 
     // ── Admin-only routes ────────────────────────────────────────────────────
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

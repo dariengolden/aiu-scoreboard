@@ -150,9 +150,18 @@
                     {{-- Teams + score (or Places for Running) --}}
                     <div class="space-y-3 mb-2">
                         @if($isRunning)
-                            {{-- Running: Show places 1st-4th --}}
+                            {{-- Running: Show places 1st-4th with points --}}
                             @for($i = 1; $i <= 4; $i++)
                             @php $placeTeam = getTeamShow($places[$i] ?? null); @endphp
+                            @php 
+                                $placePoints = match($i) {
+                                    1 => 10,
+                                    2 => 8,
+                                    3 => 6,
+                                    4 => 4,
+                                    default => 0,
+                                };
+                            @endphp
                             <div class="flex items-center justify-between py-2 px-4 bg-white/5 rounded-xl">
                                 <div class="flex items-center gap-3">
                                     @if($i === 1)
@@ -168,6 +177,9 @@
                                         {{ $placeTeam?->name ?? '—' }}
                                     </span>
                                 </div>
+                                <span class="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">
+                                    +{{ $placePoints }} pts
+                                </span>
                             </div>
                             @endfor
                         @else
@@ -218,12 +230,33 @@
                         @endif
                     </div>
 
-                    {{-- Draw indicator --}}
-                    @if(!$isRunning && $game->isCompleted() && $game->score_home !== null && $game->score_home === $game->score_away)
+                    {{-- Draw/Disqualified indicator --}}
+                    @if(!$isRunning && $game->isCompleted() && $game->score_home !== null && $game->score_away !== null)
                         <div class="mt-2 text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                Draw
-                            </span>
+                            @if($game->disqualified_team)
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                                    {{ $game->disqualified_team === 'home' ? $homeTeam?->name : ($game->disqualified_team === 'away' ? $awayTeam?->name : 'Both') }} TEAM DISQUALIFIED
+                                </span>
+                            @elseif($game->score_home === $game->score_away)
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    Draw
+                                </span>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- Disqualification reason --}}
+                    @if($game->disqualified_team && $game->disqualification_reason)
+                        <div class="mt-4 pt-4 border-t border-white/10">
+                            <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                    </svg>
+                                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Disqualification reason</span>
+                                </div>
+                                <p class="text-sm text-amber-300">{{ $game->disqualification_reason }}</p>
+                            </div>
                         </div>
                     @endif
                 </div>

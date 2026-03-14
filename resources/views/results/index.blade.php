@@ -8,6 +8,15 @@
 function getTeamResult($id) {
     return $id ? App\Models\Team::find($id) : null;
 }
+function getPlacePoints($place) {
+    return match($place) {
+        1 => 10,
+        2 => 8,
+        3 => 6,
+        4 => 4,
+        default => 0,
+    };
+}
 @endphp
 
 <div class="max-w-4xl mx-auto px-4 py-6">
@@ -61,10 +70,11 @@ function getTeamResult($id) {
                     $places = $game->game_data['places'] ?? [];
                 @endphp
                 @if($isRunning)
-                    {{-- Running: Show places 1st-4th --}}
+                    {{-- Running: Show places 1st-4th with points --}}
                     <div class="flex flex-col gap-2">
                         @for($i = 1; $i <= 4; $i++)
                         @php $placeTeam = getTeamResult($places[$i] ?? null); @endphp
+                        @php $placePoints = getPlacePoints($i); @endphp
                         <div class="flex items-center justify-between bg-white/5 rounded-xl py-3 px-4">
                             <div class="flex items-center gap-3">
                                 @if($i === 1)
@@ -80,6 +90,9 @@ function getTeamResult($id) {
                                     {{ $placeTeam?->name ?? '—' }}
                                 </span>
                             </div>
+                            <span class="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">
+                                +{{ $placePoints }} pts
+                            </span>
                         </div>
                         @endfor
                     </div>
@@ -122,10 +135,16 @@ function getTeamResult($id) {
                 </div>
                 @endif
 
-                {{-- Draw indicator (not for Running) --}}
-                @if(!$isRunning && $game->score_home !== null && $game->score_home === $game->score_away)
+                {{-- Draw/Disqualified indicator (not for Running) --}}
+                @if(!$isRunning && $game->score_home !== null && $game->score_away !== null)
                 <div class="text-center mt-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-700/50 px-3 py-1 rounded-full">Draw</span>
+                    @if($game->disqualified_team)
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-700/50 px-3 py-1 rounded-full">
+                            {{ $game->disqualified_team === 'home' ? $game->teamHome?->name : ($game->disqualified_team === 'away' ? $game->teamAway?->name : 'Both') }} TEAM DISQUALIFIED
+                        </span>
+                    @elseif($game->score_home === $game->score_away)
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-700/50 px-3 py-1 rounded-full">Draw</span>
+                    @endif
                 </div>
                 @endif
 

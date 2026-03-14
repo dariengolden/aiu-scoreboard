@@ -19,7 +19,7 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-3xl font-black text-white">{{ $sport->name }}</h1>
-                @if(false && $sport->description)
+                @if($sport->description)
                     <div class="relative">
                         <button type="button"
                                 onclick="document.getElementById('sport-rules-popup').classList.toggle('hidden')"
@@ -30,15 +30,10 @@
                             </svg>
                         </button>
 
-                        <div id="sport-rules-popup" class="hidden absolute top-full right-0 mt-2 z-50 p-0 rounded-2xl shadow-2xl shadow-black/60 bg-[#1e293b] border border-white/10 w-64">
-                            <div class="p-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <span class="font-bold text-white text-sm">INFORMATION</span>
-                                    <button onclick="document.getElementById('sport-rules-popup').classList.add('hidden')" class="text-slate-400 hover:text-white transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                        <div id="sport-rules-popup" onclick="event.stopPropagation()" class="hidden absolute top-full right-[-60] mt-2 z-50 p-0 rounded-2xl shadow-2xl shadow-black/60 bg-[#1e293b] border border-white/10 w-64">
+                            <div class="px-3 pt-2 pb-3">
+                                <div class="mb-2">
+                                    <span class="font-bold text-white text-sm">Information</span>
                                 </div>
                                 <div class="text-xs text-slate-300 leading-relaxed prose prose-invert prose-sm">{!! $sport->description !!}</div>
                             </div>
@@ -92,15 +87,10 @@
                                     </svg>
                                 </button>
 
-                                <div id="standings-info-popup" class="hidden absolute top-full left-0 mt-2 z-50 p-0 rounded-2xl shadow-2xl shadow-black/60 bg-[#1e293b] border border-white/10 w-64">
-                                    <div class="p-4">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="font-bold text-white text-sm">INFORMATION</span>
-                                            <button onclick="document.getElementById('standings-info-popup').classList.add('hidden')" class="text-slate-400 hover:text-white transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
+                                <div id="standings-info-popup" onclick="event.stopPropagation()" class="hidden absolute top-full left-[-100px] mt-2 z-50 p-0 rounded-2xl shadow-2xl shadow-black/60 bg-[#1e293b] border border-white/10 w-64">
+                                    <div class="px-3 pt-2 pb-3">
+                                        <div class="mb-2">
+                                            <span class="font-bold text-white text-sm">Information</span>
                                         </div>
                                         <div class="text-xs text-slate-300 leading-relaxed prose prose-invert prose-sm">{!! $sport->standings_description !!}</div>
                                     </div>
@@ -186,6 +176,26 @@ document.addEventListener('DOMContentLoaded', function() {
             this.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>';
             this.classList.add('opacity-75', 'pointer-events-none');
         });
+    });
+
+    // Close popups when clicking outside
+    document.addEventListener('click', function(e) {
+        const sportRulesPopup = document.getElementById('sport-rules-popup');
+        const standingsInfoPopup = document.getElementById('standings-info-popup');
+        const rulesButton = document.querySelector('[aria-label*="rules"]');
+        const infoButton = document.querySelector('[aria-label*="information"]');
+
+        if (sportRulesPopup && !sportRulesPopup.classList.contains('hidden')) {
+            if (!sportRulesPopup.contains(e.target) && (!rulesButton || !rulesButton.contains(e.target))) {
+                sportRulesPopup.classList.add('hidden');
+            }
+        }
+
+        if (standingsInfoPopup && !standingsInfoPopup.classList.contains('hidden')) {
+            if (!standingsInfoPopup.contains(e.target) && (!infoButton || !infoButton.contains(e.target))) {
+                standingsInfoPopup.classList.add('hidden');
+            }
+        }
     });
 });
 </script>

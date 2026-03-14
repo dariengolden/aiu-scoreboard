@@ -15,6 +15,18 @@ class StandingsController extends Controller
 
         $games = cache()->remember('standings_games_'.$category->id, 30, function () use ($category) {
             return $category->games()
+                ->select([
+                    'id',
+                    'category_id',
+                    'team_home_id',
+                    'team_away_id',
+                    'score_home',
+                    'score_away',
+                    'game_data',
+                    'status',
+                    'winner_id',
+                    'disqualified_team',
+                ])
                 ->with(['teamHome', 'teamAway', 'winner'])
                 ->orderBy('match_number')
                 ->get();
@@ -32,9 +44,21 @@ class StandingsController extends Controller
         return view('standings.show', compact('sport', 'category', 'games', 'sports', 'standings'));
     }
 
+    private function getPlacePoints(int $place): int
+    {
+        return match ($place) {
+            1 => 10,
+            2 => 8,
+            3 => 6,
+            4 => 4,
+            default => 0,
+        };
+    }
+
     /**
      * Compute round-robin standings from games.
      * Points: Win = 3, Draw = 1, Loss = 0
+     * For places type (racing): 1st=10, 2nd=8, 3rd=6, 4th=4
      */
     private function computeStandings($games, $teams): array
     {
@@ -59,10 +83,46 @@ class StandingsController extends Controller
                 continue;
             }
 
+            // Handle places/racing type games
+            $gameData = $game->game_data ?? [];
+            $places = $gameData['places'] ?? [];
+
+            if (! empty($places) && is_array($places)) {
+                foreach ($places as $place => $teamId) {
+                    if ($teamId && isset($stats[$teamId])) {
+                        $stats[$teamId]['played']++;
+                        $stats[$teamId]['points'] += $this->getPlacePoints((int) $place);
+                    }
+                }
+
+                continue;
+            }
+
             $homeId = $game->team_home_id;
             $awayId = $game->team_away_id;
             $scoreHome = $game->score_home ?? 0;
             $scoreAway = $game->score_away ?? 0;
+
+            // Handle disqualification
+            if ($game->disqualified_team) {
+                $stats[$homeId]['played']++;
+                $stats[$awayId]['played']++;
+
+                if ($game->disqualified_team === 'home') {
+                    $stats[$awayId]['won']++;
+                    $stats[$awayId]['points'] += 3;
+                    $stats[$homeId]['lost']++;
+                } elseif ($game->disqualified_team === 'away') {
+                    $stats[$homeId]['won']++;
+                    $stats[$homeId]['points'] += 3;
+                    $stats[$awayId]['lost']++;
+                } else {
+                    $stats[$homeId]['lost']++;
+                    $stats[$awayId]['lost']++;
+                }
+
+                continue;
+            }
 
             // Both teams played
             $stats[$homeId]['played']++;

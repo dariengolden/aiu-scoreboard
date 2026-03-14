@@ -22,7 +22,7 @@
                 @php
                     $faculties = match($team->color_hex) {
                         '#3B82F6' => 'Faculty of Religious Studies (FRS), Mission Faculty of Nursing (MFON)',
-                        '#EF4444' => 'Faculty of Education (FOS), Faculty of Science (FOS)',
+                        '#EF4444' => 'Faculty of Education (FOE), Faculty of Science (FOS)',
                         '#EC4899' => 'Faculty of Arts & Humanities (FAH)',
                         '#A855F7' => 'Faculty of Business Administration (FBA), Faculty of Information Technology (FIT)',
                         default => '',

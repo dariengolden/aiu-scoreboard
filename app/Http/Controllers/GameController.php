@@ -78,8 +78,12 @@ class GameController extends Controller
             $validated['winner_id'] = null;
         } else {
             // Auto-determine winner from scores when completed
+            // Only for sports with two teams (not for running/places type)
             $validated['winner_id'] = null;
-            if ($validated['status'] === 'completed' && isset($validated['score_home']) && isset($validated['score_away'])) {
+            $sportConfig = $game->sport_config;
+            $sportType = $sportConfig['type'] ?? 'simple';
+
+            if ($sportType !== 'places' && $validated['status'] === 'completed' && isset($validated['score_home']) && isset($validated['score_away'])) {
                 if ($validated['score_home'] > $validated['score_away']) {
                     $validated['winner_id'] = $game->team_home_id;
                 } elseif ($validated['score_away'] > $validated['score_home']) {
@@ -99,8 +103,16 @@ class GameController extends Controller
                 unset($gameData['places']);
                 $game->game_data = $gameData;
                 $game->save();
+            } elseif ($request->has('places_json')) {
+                // Save places from JSON field
+                $placesJson = $request->input('places_json', '[]');
+                $places = json_decode($placesJson, true) ?? [];
+                $gameData = $game->game_data ?? [];
+                $gameData['places'] = $places;
+                $game->game_data = $gameData;
+                $game->save();
             } elseif ($request->has('places')) {
-                // Save places
+                // Legacy support for places array
                 $places = $request->input('places', []);
                 $gameData = $game->game_data ?? [];
                 $gameData['places'] = $places;
@@ -124,6 +136,8 @@ class GameController extends Controller
         $game->current_period = null;
         $game->status = 'upcoming';
         $game->winner_id = null;
+        $game->disqualified_team = null;
+        $game->disqualification_reason = null;
         $game->notes = null;
         $game->save();
 
@@ -186,8 +200,12 @@ class GameController extends Controller
         }
 
         // Auto-determine winner when completed
+        // Only for sports with two teams (not for running/places type)
         $game->winner_id = null;
-        if ($game->status === 'completed' && $game->score_home !== null && $game->score_away !== null) {
+        $sportConfig = $game->sport_config;
+        $sportType = $sportConfig['type'] ?? 'simple';
+
+        if ($sportType !== 'places' && $game->status === 'completed' && $game->score_home !== null && $game->score_away !== null) {
             if ($game->score_home > $game->score_away) {
                 $game->winner_id = $game->team_home_id;
             } elseif ($game->score_away > $game->score_home) {
@@ -210,20 +228,93 @@ class GameController extends Controller
                 'status' => $game->status,
                 'status_label' => $game->status_label,
                 'winner_id' => $game->winner_id,
-                'team_home' => [
+                'team_home' => $game->teamHome ? [
                     'id' => $game->teamHome->id,
                     'name' => $game->teamHome->name,
                     'color_hex' => $game->teamHome->color_hex,
-                ],
-                'team_away' => [
+                ] : null,
+                'team_away' => $game->teamAway ? [
                     'id' => $game->teamAway->id,
                     'name' => $game->teamAway->name,
                     'color_hex' => $game->teamAway->color_hex,
-                ],
+                ] : null,
                 'notes' => $game->notes,
                 'updated_at' => $game->updated_at->toISOString(),
             ],
         ]);
+    }
+
+    /**
+     * Disqualify one or both teams.
+     *
+     * - home:  DQ home team → away wins, scores set to null
+     * - away:  DQ away team → home wins, scores set to null
+     * - both:  DQ both teams → no winner, scores set to null
+     */
+    public function disqualify(Request $request, Game $game): RedirectResponse
+    {
+        $validated = $request->validate([
+            'disqualify_team' => ['required', 'in:home,away,both'],
+            'disqualification_reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $side = $validated['disqualify_team'];
+
+        $game->score_home = 0;
+        $game->score_away = 0;
+        $game->status = 'completed';
+        $game->disqualified_team = $side;
+        $game->disqualification_reason = $validated['disqualification_reason'] ?? null;
+
+        $sportConfig = $game->sport_config;
+        $sportType = $sportConfig['type'] ?? 'simple';
+        $isPlaces = $sportType === 'places';
+
+        if ($side === 'home' && ! $isPlaces) {
+            $game->winner_id = $game->team_away_id;
+            $this->addWinLoss($game->team_away_id, $game->team_home_id);
+        } elseif ($side === 'away' && ! $isPlaces) {
+            $game->winner_id = $game->team_home_id;
+            $this->addWinLoss($game->team_home_id, $game->team_away_id);
+        } else {
+            // both disqualified — no winner, both get loss
+            $game->winner_id = null;
+            if ($game->team_home_id) {
+                $team = \App\Models\Team::find($game->team_home_id);
+                if ($team) {
+                    $team->losses = ($team->losses ?? 0) + 1;
+                    $team->save();
+                }
+            }
+            if ($game->team_away_id) {
+                $team = \App\Models\Team::find($game->team_away_id);
+                if ($team) {
+                    $team->losses = ($team->losses ?? 0) + 1;
+                    $team->save();
+                }
+            }
+        }
+
+        $game->save();
+
+        return redirect()->route('games.edit', $game)
+            ->with('success', 'Disqualification applied successfully.');
+    }
+
+    private function addWinLoss(int $winnerId, int $loserId): void
+    {
+        $winner = \App\Models\Team::find($winnerId);
+        $loser = \App\Models\Team::find($loserId);
+
+        if ($winner) {
+            $winner->wins = ($winner->wins ?? 0) + 1;
+            $winner->save();
+        }
+
+        if ($loser) {
+            $loser->losses = ($loser->losses ?? 0) + 1;
+            $loser->save();
+        }
     }
 
     /**
@@ -237,12 +328,14 @@ class GameController extends Controller
             'id' => $game->id,
             'score_home' => $game->score_home,
             'score_away' => $game->score_away,
-            'game_data' => $gameData ?? [],
+            'game_data' => $game->game_data ?? [],
             'game_format' => $game->game_format,
             'current_period' => $game->current_period,
             'status' => $game->status,
             'status_label' => $game->status_label,
             'winner_id' => $game->winner_id,
+            'disqualified_team' => $game->disqualified_team,
+            'disqualification_reason' => $game->disqualification_reason,
             'team_home' => [
                 'id' => $game->teamHome->id,
                 'name' => $game->teamHome->name,
@@ -292,6 +385,8 @@ class GameController extends Controller
                 'status' => $game->status,
                 'status_label' => $game->status_label,
                 'winner_id' => $game->winner_id,
+                'disqualified_team' => $game->disqualified_team,
+                'disqualification_reason' => $game->disqualification_reason,
                 'team_home_name' => $game->teamHome?->name,
                 'team_away_name' => $game->teamAway?->name,
                 'updated_at' => $game->updated_at->toISOString(),

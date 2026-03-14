@@ -222,8 +222,6 @@
                 </div>
                 @endfor
             </div>
-
-            <input type="hidden" id="places-json" name="places_json" value="{{ json_encode($gameData['places'] ?? []) }}">
         </div>
         @else
 
@@ -509,6 +507,9 @@
         <input type="hidden" name="status" id="hidden-status" value="{{ $game->status }}">
         <input type="hidden" name="score_home" id="hidden-score-home" value="{{ $game->score_home ?? '' }}">
         <input type="hidden" name="score_away" id="hidden-score-away" value="{{ $game->score_away ?? '' }}">
+        @if($sportType === 'places')
+        <input type="hidden" name="places_json" id="places-json" value="{{ json_encode($gameData['places'] ?? []) }}">
+        @endif
 
         {{-- Schedule & Location --}}
         <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 space-y-4">
@@ -550,6 +551,78 @@
     </form>
 
     @if($sportType !== 'places')
+    {{-- Disqualification Status Banner --}}
+    @if($game->disqualified_team)
+    <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 mb-3">
+        <div class="flex items-center gap-2 mb-2">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            <h2 class="text-sm font-bold text-red-400 uppercase tracking-wider">Disqualified</h2>
+        </div>
+        <p class="text-sm text-red-300 mb-2">
+            @if($game->disqualified_team === 'home')
+                <span class="font-bold">{{ $game->teamHome->name }}</span> has been disqualified. <span class="font-bold">{{ $game->teamAway->name }}</span> wins by default.
+            @elseif($game->disqualified_team === 'away')
+                <span class="font-bold">{{ $game->teamAway->name }}</span> has been disqualified. <span class="font-bold">{{ $game->teamHome->name }}</span> wins by default.
+            @else
+                <span class="font-bold">Both teams</span> have been disqualified. No winner recorded.
+            @endif
+        </p>
+        @if($game->disqualification_reason)
+        <div class="bg-red-500/5 border border-red-500/20 rounded-lg p-3 mt-2">
+            <p class="text-xs text-red-400 font-semibold mb-1">Reason:</p>
+            <p class="text-sm text-red-300">{{ $game->disqualification_reason }}</p>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- Disqualification --}}
+    <div class="bg-[#1e293b] rounded-2xl p-5 border border-white/5 mb-3">
+        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Disqualification</h2>
+        <p class="text-xs text-slate-500 mb-4">Disqualify a team to award the win to the opponent. Scores will be set to null.</p>
+
+        <form id="dq-form" method="POST" action="{{ route('games.disqualify', $game) }}" class="hidden">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="disqualify_team" id="dq-team-input" value="">
+        </form>
+
+        <div class="grid grid-cols-3 gap-2 mb-3">
+            <button type="button" data-dq="home"
+                    class="dq-btn py-3 rounded-xl text-xs font-bold border-2 border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all">
+                DQ {{ $game->teamHome->name }}
+            </button>
+            <button type="button" data-dq="both"
+                    class="dq-btn py-3 rounded-xl text-xs font-bold border-2 border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all">
+                DQ Both
+            </button>
+            <button type="button" data-dq="away"
+                    class="dq-btn py-3 rounded-xl text-xs font-bold border-2 border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95 transition-all">
+                DQ {{ $game->teamAway->name }}
+            </button>
+        </div>
+
+        @if($game->disqualified_team)
+        <form id="dq-reason-form" method="POST" action="{{ route('games.disqualify', $game) }}" class="mt-3 pt-3 border-t border-white/10">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="disqualify_team" value="{{ $game->disqualified_team }}">
+            <div>
+                <label for="dq-reason-edit" class="block text-xs font-semibold text-slate-400 mb-2">Reason (optional)</label>
+                <textarea id="dq-reason-edit" name="disqualification_reason" rows="2"
+                          class="w-full bg-[#0f172a] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-slate-500"
+                          placeholder="Reason for disqualification...">{{ $game->disqualification_reason }}</textarea>
+            </div>
+            <button type="submit"
+                    class="mt-2 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl transition-colors text-sm">
+                Update Reason
+            </button>
+        </form>
+        @endif
+    </div>
+
     {{-- Clear Scores --}}
     <form id="clear-scores-form" action="{{ route('games.update', $game) }}" method="POST" class="pb-3">
         @csrf
@@ -680,30 +753,65 @@
     const resetBtn = document.getElementById('reset-btn');
     const resetForm = document.getElementById('reset-form');
 
-    resetBtn.addEventListener('click', async () => {
-        const confirmed = await showModal(
-            'Reset Match?',
-            'Are you sure you want to reset this match? All scores, game data, and notes will be cleared. This cannot be undone.',
-            'Reset Match'
-        );
-        if (confirmed) {
-            resetForm.submit();
-        }
-    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+            const confirmed = await showModal(
+                'Reset Match?',
+                'Are you sure you want to reset this match? All scores, game data, and notes will be cleared. This cannot be undone.',
+                'Reset Match'
+            );
+            if (confirmed) {
+                resetForm.submit();
+            }
+        });
+    }
 
     // ── Clear Scores Confirmation ───────────────────────────────────────────
     const clearScoresBtn = document.getElementById('clear-scores-btn');
     const clearScoresForm = document.getElementById('clear-scores-form');
 
-    clearScoresBtn.addEventListener('click', async () => {
-        const confirmed = await showModal(
-            'Clear Scores?',
-            'Are you sure you want to clear both scores to null? This action cannot be undone.',
-            'Clear Scores'
-        );
-        if (confirmed) {
-            clearScoresForm.submit();
-        }
+    if (clearScoresBtn) {
+        clearScoresBtn.addEventListener('click', async () => {
+            const confirmed = await showModal(
+                'Clear Scores?',
+                'Are you sure you want to clear both scores to null? This action cannot be undone.',
+                'Clear Scores'
+            );
+            if (confirmed) {
+                clearScoresForm.submit();
+            }
+        });
+    }
+
+    // ── Disqualification Confirmation ───────────────────────────────────────
+    const dqForm = document.getElementById('dq-form');
+    const dqTeamInput = document.getElementById('dq-team-input');
+
+    document.querySelectorAll('.dq-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const side = btn.dataset.dq;
+            const homeTeam = @json($game->teamHome ? $game->teamHome->name : 'Home Team');
+            const awayTeam = @json($game->teamAway ? $game->teamAway->name : 'Away Team');
+
+            let title, message;
+
+            if (side === 'home') {
+                title = `Disqualify ${homeTeam}?`;
+                message = `Are you sure you want to disqualify ${homeTeam}? ${awayTeam} will be awarded the win. Scores will be set to null.`;
+            } else if (side === 'away') {
+                title = `Disqualify ${awayTeam}?`;
+                message = `Are you sure you want to disqualify ${awayTeam}? ${homeTeam} will be awarded the win. Scores will be set to null.`;
+            } else {
+                title = 'Disqualify Both Teams?';
+                message = 'Are you sure you want to disqualify both teams? No winner will be recorded and scores will be set to null.';
+            }
+
+            const confirmed = await showModal(title, message, 'Disqualify');
+            if (confirmed) {
+                dqTeamInput.value = side;
+                dqForm.submit();
+            }
+        });
     });
 
     // ── Reset Places Confirmation (Running) ─────────────────────────────────────
@@ -789,6 +897,63 @@
     const hiddenStatus = document.getElementById('hidden-status');
     const hiddenScoreHome = document.getElementById('hidden-score-home');
     const hiddenScoreAway = document.getElementById('hidden-score-away');
+    const placesJsonInput = document.getElementById('places-json');
+
+    // ── Places (Running/Racing) handling ─────────────────────────────────────
+    function initPlacesHandling() {
+        if (config.sportType !== 'places') return;
+        
+        const placeSelects = document.querySelectorAll('.place-select');
+        if (!placeSelects.length) return;
+
+        // Initialize places from gameData
+        const places = gameData.places || {};
+        
+        // Function to filter options in all selects
+        function filterPlaceOptions() {
+            const selectedTeamIds = Array.from(placeSelects)
+                .map(s => s.value)
+                .filter(v => v !== '');
+            
+            placeSelects.forEach(select => {
+                const currentValue = select.value;
+                Array.from(select.options).forEach(option => {
+                    if (option.value === '') return;
+                    // Hide if selected in another dropdown
+                    const isSelectedElsewhere = selectedTeamIds.includes(option.value) && option.value !== currentValue;
+                    option.style.display = isSelectedElsewhere ? 'none' : '';
+                });
+            });
+        }
+
+        // Function to update hidden places_json field
+        function updatePlacesJson() {
+            const placesData = {};
+            placeSelects.forEach((select, index) => {
+                const placeNum = index + 1;
+                if (select.value) {
+                    placesData[placeNum] = select.value;
+                }
+            });
+            if (placesJsonInput) {
+                placesJsonInput.value = JSON.stringify(placesData);
+            }
+        }
+
+        // Add change listeners to all place selects
+        placeSelects.forEach(select => {
+            select.addEventListener('change', () => {
+                filterPlaceOptions();
+                updatePlacesJson();
+            });
+        });
+
+        // Initial filter
+        filterPlaceOptions();
+    }
+
+    // Initialize places handling if needed
+    initPlacesHandling();
 
     // ── Period tabs ──────────────────────────────────────────────────────
     function renderPeriodTabs() {
@@ -1027,7 +1192,8 @@
         const periods = gameData.periods || [];
         const otCount = periods.length - 4;
         addOtBtn.disabled = otCount >= 5;
-        addOtBtn.classList.toggle('opacity-50 cursor-not-allowed', otCount >= 5);
+        addOtBtn.classList.toggle('opacity-50', otCount >= 5);
+        addOtBtn.classList.toggle('cursor-not-allowed', otCount >= 5);
     }
 
     // ── Halftime checkbox (basketball) ────────────────────────────────────

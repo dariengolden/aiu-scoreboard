@@ -15,16 +15,17 @@ class ResultController extends Controller
         $selectedSport = $request->input('sport');
 
         $query = Game::select([
-                'id',
-                'category_id',
-                'team_home_id',
-                'team_away_id',
-                'score_home',
-                'score_away',
-                'status',
-                'winner_id',
-                'updated_at',
-            ])
+            'id',
+            'category_id',
+            'team_home_id',
+            'team_away_id',
+            'score_home',
+            'score_away',
+            'status',
+            'winner_id',
+            'updated_at',
+            'disqualified_team',
+        ])
             ->with(['category.sport', 'teamHome', 'teamAway', 'winner'])
             ->where('status', 'completed');
 

@@ -23,6 +23,8 @@ class Game extends Model
         'location',
         'notes',
         'winner_id',
+        'disqualified_team',
+        'disqualification_reason',
         'event_type',
         'event_title',
     ];
