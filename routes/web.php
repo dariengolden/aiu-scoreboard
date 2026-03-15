@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SportController;
+use App\Http\Controllers\StandingsController;
 use App\Http\Controllers\UserController;
 use App\Models\Category;
 use App\Models\Sport;
@@ -51,5 +52,6 @@ Route::middleware('auth')->group(function () {
         Route::get('sports', [SportController::class, 'adminIndex'])->name('sports.index');
         Route::get('sports/{sport}/edit', [SportController::class, 'adminEdit'])->name('sports.edit');
         Route::put('sports/{sport}', [SportController::class, 'adminUpdate'])->name('sports.update');
+        Route::get('standings', [StandingsController::class, 'adminIndex'])->name('standings.index');
     });
 });

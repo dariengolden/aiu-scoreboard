@@ -33,6 +33,10 @@
                    class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
                     Sports
                 </a>
+                <a href="{{ route('admin.standings.index') }}"
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.standings.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                    Standings
+                </a>
                 @endif
                 <a href="{{ route('dashboard') }}"
                    class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
@@ -93,6 +97,11 @@
                class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'text-blue-400' : 'text-slate-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Sports
+            </a>
+            <a href="{{ route('admin.standings.index') }}"
+               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.standings.*') ? 'text-blue-400' : 'text-slate-400' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Standings
             </a>
             @endif
             <a href="{{ route('home') }}"

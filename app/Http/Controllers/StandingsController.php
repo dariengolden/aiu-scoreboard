@@ -9,6 +9,105 @@ use Illuminate\View\View;
 
 class StandingsController extends Controller
 {
+    public function index(): View
+    {
+        return view('standings.index');
+    }
+
+    public function adminIndex(): View
+    {
+        $sports = Sport::orderBy('order')->with('categories')->get();
+        $teams = Team::orderBy('name')->get()->keyBy('id');
+
+        $categoryStandings = [];
+        foreach ($sports as $sport) {
+            foreach ($sport->categories as $category) {
+                $games = $category->games()
+                    ->select(['id', 'category_id', 'team_home_id', 'team_away_id', 'score_home', 'score_away', 'game_data', 'status', 'winner_id', 'disqualified_team'])
+                    ->get();
+                $categoryStandings[$category->id] = $this->computeStandings($games, $teams);
+            }
+        }
+
+        $sportStandings = [];
+        foreach ($sports as $sport) {
+            $sportPoints = [];
+            foreach ($sport->categories as $category) {
+                foreach ($categoryStandings[$category->id] ?? [] as $teamId => $stats) {
+                    if (! isset($teams[$teamId])) {
+                        continue;
+                    }
+                    if (! isset($sportPoints[$teamId])) {
+                        $sportPoints[$teamId] = [
+                            'team' => $teams[$teamId],
+                            'points' => 0,
+                            'goals_for' => 0,
+                            'goals_against' => 0,
+                        ];
+                    }
+                    $sportPoints[$teamId]['points'] += $stats['points'];
+                    $sportPoints[$teamId]['goals_for'] += $stats['goals_for'];
+                    $sportPoints[$teamId]['goals_against'] += $stats['goals_against'];
+                }
+            }
+
+            uasort($sportPoints, function ($a, $b) {
+                if ($a['points'] !== $b['points']) {
+                    return $b['points'] <=> $a['points'];
+                }
+                $gdA = $a['goals_for'] - $a['goals_against'];
+                $gdB = $b['goals_for'] - $b['goals_against'];
+                if ($gdA !== $gdB) {
+                    return $gdB <=> $gdA;
+                }
+
+                return $b['goals_for'] <=> $a['goals_for'];
+            });
+
+            $sportStandings[$sport->slug] = [
+                'sport' => $sport,
+                'standings' => $sportPoints,
+            ];
+        }
+
+        $overallPoints = [];
+        foreach ($sports as $sport) {
+            foreach ($sport->categories as $category) {
+                foreach ($categoryStandings[$category->id] ?? [] as $teamId => $stats) {
+                    if (! isset($teams[$teamId])) {
+                        continue;
+                    }
+                    if (! isset($overallPoints[$teamId])) {
+                        $overallPoints[$teamId] = [
+                            'team' => $teams[$teamId],
+                            'points' => 0,
+                            'goals_for' => 0,
+                            'goals_against' => 0,
+                        ];
+                    }
+                    $overallPoints[$teamId]['points'] += $stats['points'];
+                    $overallPoints[$teamId]['goals_for'] += $stats['goals_for'];
+                    $overallPoints[$teamId]['goals_against'] += $stats['goals_against'];
+                }
+            }
+        }
+
+        uasort($overallPoints, function ($a, $b) {
+            if ($a['points'] !== $b['points']) {
+                return $b['points'] <=> $a['points'];
+            }
+            $gdA = $a['goals_for'] - $a['goals_against'];
+            $gdB = $b['goals_for'] - $b['goals_against'];
+            if ($gdA !== $gdB) {
+                return $gdB <=> $gdA;
+            }
+
+            return $b['goals_for'] <=> $a['goals_for'];
+        });
+
+        return view('admin.standings', compact('sports', 'sportStandings', 'overallPoints', 'categoryStandings'));
+    }
+
     public function show(Sport $sport, Category $category): View
     {
         abort_unless($category->sport_id === $sport->id, 404);

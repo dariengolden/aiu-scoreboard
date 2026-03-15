@@ -408,7 +408,7 @@
 </div>
 
 {{-- Back to Top Button --}}
-<button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-28 md:bottom-6 md:right-6 right-4 z-50 p-3 rounded-full bg-slate-200 text-slate-900 shadow-lg transition-all duration-300 hover:bg-white" style="display: none;">
+<button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-28 right-4 md:bottom-23 md:right-6 z-50 p-3 rounded-full bg-slate-200 text-slate-900 shadow-lg transition-all duration-300 hover:bg-white" style="display: none;">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
 
