@@ -44,6 +44,7 @@ class GameResource extends JsonResource
             ],
             'eventType' => $this->event_type,
             'eventTitle' => $this->event_title,
+            'sportType' => $this->sport_config['type'] ?? null,
         ];
     }
 }

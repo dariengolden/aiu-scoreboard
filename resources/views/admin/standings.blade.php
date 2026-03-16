@@ -6,9 +6,6 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-white">Team Standings</h1>
-        <button onclick="document.body.classList.toggle('show-details')" class="text-sm px-3 py-1.5 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors">
-            Show Details
-        </button>
     </div>
 
     {{-- Overall Standings --}}
@@ -28,38 +25,12 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Rank</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Team</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">P</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">W</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">D</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">L</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GF</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GA</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GD</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Pts</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Points</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
                     @php $rank = 1 @endphp
                     @foreach($overallPoints as $teamId => $stat)
-                    @php
-                        $gd = $stat['goals_for'] - $stat['goals_against'];
-                        $played = 0;
-                        $won = 0;
-                        $drawn = 0;
-                        $lost = 0;
-                        foreach ($sports as $sport) {
-                            foreach ($sport->categories as $category) {
-                                foreach ($categoryStandings[$category->id] ?? [] as $catTeamId => $catStats) {
-                                    if ($catTeamId == $teamId) {
-                                        $played += $catStats['played'];
-                                        $won += $catStats['won'];
-                                        $drawn += $catStats['drawn'];
-                                        $lost += $catStats['lost'];
-                                    }
-                                }
-                            }
-                        }
-                    @endphp
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold
@@ -75,15 +46,6 @@
                                 <span class="w-3 h-3 rounded-full {{ $stat['team']->getBgColorClass() }}"></span>
                                 <span class="font-medium text-white">{{ ucfirst($stat['team']->name) }}</span>
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $played }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $won }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $drawn }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $lost }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $stat['goals_for'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $stat['goals_against'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center details-col {{ $gd >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                            {{ $gd > 0 ? '+' : '' }}{{ $gd }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-lg text-sm font-bold bg-blue-500/20 text-blue-400">
@@ -113,36 +75,12 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Rank</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Team</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">P</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">W</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">D</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">L</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GF</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GA</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider details-col">GD</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Pts</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Points</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
                     @php $rank = 1 @endphp
                     @foreach($sportData['standings'] as $teamId => $stat)
-                    @php
-                        $gd = $stat['goals_for'] - $stat['goals_against'];
-                        $played = 0;
-                        $won = 0;
-                        $drawn = 0;
-                        $lost = 0;
-                        foreach ($sport->categories as $category) {
-                            foreach ($categoryStandings[$category->id] ?? [] as $catTeamId => $catStats) {
-                                if ($catTeamId == $teamId) {
-                                    $played += $catStats['played'];
-                                    $won += $catStats['won'];
-                                    $drawn += $catStats['drawn'];
-                                    $lost += $catStats['lost'];
-                                }
-                            }
-                        }
-                    @endphp
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold
@@ -159,15 +97,6 @@
                                 <span class="font-medium text-white">{{ ucfirst($stat['team']->name) }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $played }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $won }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $drawn }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $lost }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $stat['goals_for'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-slate-300 details-col">{{ $stat['goals_against'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center details-col {{ $gd >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                            {{ $gd > 0 ? '+' : '' }}{{ $gd }}
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-lg text-sm font-bold bg-blue-500/20 text-blue-400">
                                 {{ $stat['points'] }}
@@ -183,10 +112,4 @@
     @endif
     @endforeach
 </div>
-
-<style>
-body:not(.show-details) .details-col {
-    display: none;
-}
-</style>
 @endsection

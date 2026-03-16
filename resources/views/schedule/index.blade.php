@@ -216,9 +216,10 @@
                         };
                     @endphp
                     @php
-                        $gameTitle = $game->event_title ?: ($game->teamHome?->name ?? 'TBD') . ' vs ' . ($game->teamAway?->name ?? 'TBD');
                         $sportConfig = $game->sport_config;
                         $sportType = $sportConfig['type'] ?? null;
+                        $isRunning = $sportType === 'places';
+                        $gameTitle = $game->event_title ?: ($isRunning ? ($game->category?->name ?? 'Race') : (($game->teamHome?->name ?? 'TBD') . ' vs ' . ($game->teamAway?->name ?? 'TBD')));
                         $gameData = $game->game_data ?? [];
                         $isLive = $game->isLiveOrEventLive();
                         $periodLabels = $game->period_labels ?? [];
@@ -236,10 +237,11 @@
                        data-sport-name="{{ $game->category?->sport?->name ?? '' }}"
                        data-category-name="{{ $game->category?->name ?? '' }}"
                        data-match-label="{{ $game->match_label ?? '' }}"
-                       data-home-name="{{ $game->teamHome?->name ?? 'TBD' }}"
-                       data-home-color="{{ $game->teamHome?->color_hex ?? '#94a3b8' }}"
-                       data-away-name="{{ $game->teamAway?->name ?? 'TBD' }}"
-                       data-away-color="{{ $game->teamAway?->color_hex ?? '#94a3b8' }}"
+                       data-sport-type="{{ $sportType ?? '' }}"
+                       data-home-name="{{ $isRunning ? '' : ($game->teamHome?->name ?? 'TBD') }}"
+                       data-home-color="{{ $isRunning ? '#6b7280' : ($game->teamHome?->color_hex ?? '#94a3b8') }}"
+                       data-away-name="{{ $isRunning ? '' : ($game->teamAway?->name ?? 'TBD') }}"
+                       data-away-color="{{ $isRunning ? '#6b7280' : ($game->teamAway?->color_hex ?? '#94a3b8') }}"
                        data-score-home="{{ $game->score_home ?? '' }}"
                        data-score-away="{{ $game->score_away ?? '' }}"
                        data-status="{{ $game->status }}"
@@ -261,6 +263,8 @@
                         <div class="flex items-center gap-1 mt-0.5 min-w-0">
                             @if($game->event_title)
                             <span class="text-[10px] text-slate-300 truncate leading-tight font-medium">{{ $game->event_title }}</span>
+                            @elseif($isRunning)
+                            <span class="text-[10px] text-blue-300/70 truncate leading-tight font-medium">All teams compete</span>
                             @else
                             <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}"></span>
                             <span class="text-[10px] text-slate-400 truncate leading-tight">
@@ -316,6 +320,7 @@
                     @php
                         $sportConfig = $game->sport_config;
                         $sportType = $sportConfig['type'] ?? null;
+                        $isRunning = $sportType === 'places';
                         $gameData = $game->game_data ?? [];
                         $periodLabels = $game->period_labels ?? [];
                         $breakdownItems = [];
@@ -332,10 +337,11 @@
                        data-sport-name="{{ $game->category?->sport?->name ?? '' }}"
                        data-category-name="{{ $game->category?->name ?? '' }}"
                        data-match-label="{{ $game->match_label ?? '' }}"
-                       data-home-name="{{ $game->teamHome?->name ?? 'TBD' }}"
-                       data-home-color="{{ $game->teamHome?->color_hex ?? '#94a3b8' }}"
-                       data-away-name="{{ $game->teamAway?->name ?? 'TBD' }}"
-                       data-away-color="{{ $game->teamAway?->color_hex ?? '#94a3b8' }}"
+                       data-sport-type="{{ $sportType ?? '' }}"
+                       data-home-name="{{ $isRunning ? '' : ($game->teamHome?->name ?? 'TBD') }}"
+                       data-home-color="{{ $isRunning ? '#6b7280' : ($game->teamHome?->color_hex ?? '#94a3b8') }}"
+                       data-away-name="{{ $isRunning ? '' : ($game->teamAway?->name ?? 'TBD') }}"
+                       data-away-color="{{ $isRunning ? '#6b7280' : ($game->teamAway?->color_hex ?? '#94a3b8') }}"
                        data-score-home="{{ $game->score_home ?? '' }}"
                        data-score-away="{{ $game->score_away ?? '' }}"
                        data-status="{{ $game->status }}"
@@ -370,6 +376,8 @@
                                 <div class="flex items-center gap-1.5 mt-1">
                                     @if($game->event_title)
                                     <span class="text-xs font-semibold text-slate-200">{{ $game->event_title }}</span>
+                                    @elseif($isRunning)
+                                    <span class="text-xs font-medium text-blue-300/70">All teams compete</span>
                                     @else
                                     <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}"></span>
                                     <span class="text-xs font-medium" style="color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}">{{ $game->teamHome?->name ?? 'TBD' }}</span>
@@ -435,33 +443,8 @@
                 </div>
             </div>
 
-            {{-- Teams + Score --}}
-            <div class="px-4 pb-3">
-                {{-- Home team --}}
-                <div class="flex items-center justify-between py-1.5">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-3 h-3 rounded-full shrink-0" id="modal-home-color"></span>
-                        <span class="font-semibold text-sm truncate text-slate-300" id="modal-home-name"></span>
-                    </div>
-                    <span class="text-lg font-bold tabular-nums text-slate-400" id="modal-score-home">—</span>
-                </div>
-
-                <div class="border-t border-white/5 mx-0"></div>
-
-                {{-- Away team --}}
-                <div class="flex items-center justify-between py-1.5">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-3 h-3 rounded-full shrink-0" id="modal-away-color"></span>
-                        <span class="font-semibold text-sm truncate text-slate-300" id="modal-away-name"></span>
-                    </div>
-                    <span class="text-lg font-bold tabular-nums text-slate-400" id="modal-score-away">—</span>
-                </div>
-
-                {{-- Period breakdown --}}
-                <div id="modal-breakdown" class="hidden mt-2 pt-2 border-t border-white/5">
-                    <div class="flex items-center gap-1.5 text-xs tabular-nums" id="modal-breakdown-content"></div>
-                </div>
-            </div>
+            {{-- Teams + Score (dynamically populated by JS) --}}
+            <div class="px-4 pb-3" id="modal-body"></div>
 
             {{-- Footer: time + location + clickable area --}}
             <a href="#" id="modal-match-link" class="block px-4 py-3 bg-white/[0.03] border-t border-white/5 hover:bg-white/[0.06] transition-colors cursor-pointer">
@@ -533,27 +516,69 @@
             periodEl.classList.add('hidden');
         }
 
-        // Team colours & names
-        document.getElementById('modal-home-name').textContent = link.dataset.homeName || '';
-        document.getElementById('modal-home-color').style.backgroundColor = link.dataset.homeColor || '#94a3b8';
-        document.getElementById('modal-away-name').textContent = link.dataset.awayName || '';
-        document.getElementById('modal-away-color').style.backgroundColor = link.dataset.awayColor || '#94a3b8';
+        // Build modal body based on sport type
+        const modalBody = document.getElementById('modal-body');
+        const isRunning = (link.dataset.sportType === 'places');
 
-        // Scores with winner highlight
-        const scoreHome = link.dataset.scoreHome;
-        const scoreAway = link.dataset.scoreAway;
-        const homeScoreEl = document.getElementById('modal-score-home');
-        const awayScoreEl = document.getElementById('modal-score-away');
-        homeScoreEl.textContent = scoreHome !== '' ? scoreHome : '—';
-        awayScoreEl.textContent = scoreAway !== '' ? scoreAway : '—';
-        homeScoreEl.classList.remove('text-green-400');
-        awayScoreEl.classList.remove('text-green-400');
-        if (link.dataset.status === 'completed' && scoreHome !== '' && scoreAway !== '') {
-            if (parseInt(scoreHome) > parseInt(scoreAway)) {
-                homeScoreEl.classList.add('text-green-400');
-            } else if (parseInt(scoreAway) > parseInt(scoreHome)) {
-                awayScoreEl.classList.add('text-green-400');
-            }
+        if (isRunning) {
+            // Running: show places (1st-4th) instead of home vs away
+            const placeLabels = ['1st', '2nd', '3rd', '4th'];
+            const placeIcons = ['\u{1F947}', '\u{1F948}', '\u{1F949}', '4th'];
+            let bodyHtml = '<div class="text-center py-3"><span class="text-xs font-medium text-blue-300/70">All teams compete &mdash; Places</span></div>';
+            placeLabels.forEach((label, i) => {
+                bodyHtml += `<div class="flex items-center justify-between py-1.5${i < 3 ? ' border-b border-white/5' : ''}">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-sm shrink-0">${i < 3 ? placeIcons[i] : '<span class="text-slate-500 text-sm">4th</span>'}</span>
+                        <span class="font-semibold text-sm truncate text-slate-500">&mdash;</span>
+                    </div>
+                </div>`;
+            });
+            modalBody.innerHTML = bodyHtml;
+        } else {
+            // Normal: home vs away with scores
+            const homeName = link.dataset.homeName || '';
+            const homeColor = link.dataset.homeColor || '#94a3b8';
+            const awayName = link.dataset.awayName || '';
+            const awayColor = link.dataset.awayColor || '#94a3b8';
+            const scoreHome = link.dataset.scoreHome;
+            const scoreAway = link.dataset.scoreAway;
+            const isCompleted = link.dataset.status === 'completed';
+            const homeWins = isCompleted && scoreHome !== '' && scoreAway !== '' && parseInt(scoreHome) > parseInt(scoreAway);
+            const awayWins = isCompleted && scoreHome !== '' && scoreAway !== '' && parseInt(scoreAway) > parseInt(scoreHome);
+
+            let bodyHtml = `<div class="flex items-center justify-between py-1.5">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${homeColor}"></span>
+                    <span class="font-semibold text-sm truncate text-slate-300">${homeName}</span>
+                </div>
+                <span class="text-lg font-bold tabular-nums ${homeWins ? 'text-green-400' : 'text-slate-400'}">${scoreHome !== '' ? scoreHome : '\u2014'}</span>
+            </div>
+            <div class="border-t border-white/5 mx-0"></div>
+            <div class="flex items-center justify-between py-1.5">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${awayColor}"></span>
+                    <span class="font-semibold text-sm truncate text-slate-300">${awayName}</span>
+                </div>
+                <span class="text-lg font-bold tabular-nums ${awayWins ? 'text-green-400' : 'text-slate-400'}">${scoreAway !== '' ? scoreAway : '\u2014'}</span>
+            </div>`;
+
+            // Period breakdown
+            try {
+                const breakdown = JSON.parse(link.dataset.breakdown || '[]');
+                const periodLabels = JSON.parse(link.dataset.periodLabels || '[]');
+                if (breakdown && breakdown.length > 0) {
+                    bodyHtml += '<div class="mt-2 pt-2 border-t border-white/5"><div class="flex items-center gap-1.5 text-xs tabular-nums">';
+                    breakdown.forEach((item, i) => {
+                        bodyHtml += `<div class="flex flex-col items-center px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                            <span class="text-[10px] text-slate-500 font-medium">${periodLabels[i] || 'P' + (i + 1)}</span>
+                            <span class="text-xs font-bold text-slate-200">${item.home ?? 0}-${item.away ?? 0}</span>
+                        </div>`;
+                    });
+                    bodyHtml += '</div></div>';
+                }
+            } catch(e) {}
+
+            modalBody.innerHTML = bodyHtml;
         }
 
         // Time
@@ -572,27 +597,6 @@
             locationEl.classList.remove('hidden');
         } else {
             locationEl.classList.add('hidden');
-        }
-
-        // Period breakdown
-        const breakdownEl = document.getElementById('modal-breakdown');
-        const breakdownContentEl = document.getElementById('modal-breakdown-content');
-        try {
-            const breakdown = JSON.parse(link.dataset.breakdown || '[]');
-            const periodLabels = JSON.parse(link.dataset.periodLabels || '[]');
-            if (breakdown && breakdown.length > 0) {
-                breakdownContentEl.innerHTML = breakdown.map((item, i) =>
-                    `<div class="flex flex-col items-center px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                        <span class="text-[10px] text-slate-500 font-medium">${periodLabels[i] || 'P' + (i + 1)}</span>
-                        <span class="text-xs font-bold text-slate-200">${item.home ?? 0}-${item.away ?? 0}</span>
-                    </div>`
-                ).join('');
-                breakdownEl.classList.remove('hidden');
-            } else {
-                breakdownEl.classList.add('hidden');
-            }
-        } catch(e) {
-            breakdownEl.classList.add('hidden');
         }
 
         document.getElementById('modal-match-link').href = link.dataset.gameUrl || '#';
@@ -796,14 +800,24 @@
                 if (hasGames) {
                     desktopHtml += '<div class="px-1.5 pb-1.5 flex-1 space-y-0.5 overflow-y-auto">';
                     dayGames.forEach(game => {
+                        const isRunning = game.sportType === 'places';
                         const statusColor = game.status === 'in_progress' ? 'border-l-green-500 bg-green-500/10' : (game.status === 'completed' ? 'border-l-blue-500/50 bg-blue-500/5' : 'border-l-slate-600 bg-white/[0.03]');
                         const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                        const gameTitle = game.eventTitle || (game.teamHome.name + ' vs ' + game.teamAway.name);
-                        const gameDisplay = game.eventTitle
-                            ? `<span class="text-[10px] text-slate-300 truncate leading-tight font-medium">${game.eventTitle}</span>`
-                            : `<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
-                               <span class="text-[10px] text-slate-400 truncate leading-tight">${game.teamHome.name} <span class="text-slate-600">vs</span> ${game.teamAway.name}</span>
-                               <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>`;
+                        const homeName = isRunning ? '' : (game.teamHome?.name || '');
+                        const awayName = isRunning ? '' : (game.teamAway?.name || '');
+                        const homeColor = isRunning ? '#6b7280' : (game.teamHome?.colorHex || '#94a3b8');
+                        const awayColor = isRunning ? '#6b7280' : (game.teamAway?.colorHex || '#94a3b8');
+                        const gameTitle = game.eventTitle || (isRunning ? (game.category.name || 'Race') : (homeName + ' vs ' + awayName));
+                        let gameDisplay;
+                        if (game.eventTitle) {
+                            gameDisplay = `<span class="text-[10px] text-slate-300 truncate leading-tight font-medium">${game.eventTitle}</span>`;
+                        } else if (isRunning) {
+                            gameDisplay = `<span class="text-[10px] text-blue-300/70 truncate leading-tight font-medium">All teams compete</span>`;
+                        } else {
+                            gameDisplay = `<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${homeColor}"></span>
+                               <span class="text-[10px] text-slate-400 truncate leading-tight">${homeName} <span class="text-slate-600">vs</span> ${awayName}</span>
+                               <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${awayColor}"></span>`;
+                        }
                         const gameUrl = `/scores/${game.category.sport.slug}/${game.category.slug}/match-${game.matchParam}`;
                         const breakdown = game.gameData ? (game.gameData.sets || game.gameData.periods || []) : [];
                         const breakdownFiltered = breakdown.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
@@ -814,10 +828,11 @@
                             data-sport-name="${game.category.sport.name || ''}"
                             data-category-name="${game.category.name || ''}"
                             data-match-label="${game.matchLabel || ''}"
-                            data-home-name="${game.teamHome.name}"
-                            data-home-color="${game.teamHome.colorHex}"
-                            data-away-name="${game.teamAway.name}"
-                            data-away-color="${game.teamAway.colorHex}"
+                            data-sport-type="${game.sportType || ''}"
+                            data-home-name="${homeName}"
+                            data-home-color="${homeColor}"
+                            data-away-name="${awayName}"
+                            data-away-color="${awayColor}"
                             data-score-home="${game.scoreHome ?? ''}"
                             data-score-away="${game.scoreAway ?? ''}"
                             data-status="${game.status}"
@@ -873,10 +888,27 @@
                     </div>
                     <div class="divide-y divide-white/5">`;
                 dayGames.forEach(game => {
+                    const isRunning = game.sportType === 'places';
                     const gameTime = game.scheduledTime || new Date(game.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                     const gameUrl = `/scores/${game.category.sport.slug}/${game.category.slug}/match-${game.matchParam}`;
+                    const homeName = isRunning ? '' : (game.teamHome?.name || '');
+                    const awayName = isRunning ? '' : (game.teamAway?.name || '');
+                    const homeColor = isRunning ? '#6b7280' : (game.teamHome?.colorHex || '#94a3b8');
+                    const awayColor = isRunning ? '#6b7280' : (game.teamAway?.colorHex || '#94a3b8');
                     const breakdown = game.gameData ? (game.gameData.sets || game.gameData.periods || []) : [];
                     const breakdownFiltered = breakdown.filter(item => (item.home || 0) > 0 || (item.away || 0) > 0);
+                    let teamDisplay;
+                    if (game.eventTitle) {
+                        teamDisplay = `<span class="text-xs font-semibold text-slate-200">${game.eventTitle}</span>`;
+                    } else if (isRunning) {
+                        teamDisplay = `<span class="text-xs font-medium text-blue-300/70">All teams compete</span>`;
+                    } else {
+                        teamDisplay = `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${homeColor}"></span>
+                                           <span class="text-xs font-medium" style="color: ${homeColor}">${homeName}</span>
+                                           <span class="text-xs text-slate-600 font-bold">VS</span>
+                                           <span class="text-xs font-medium" style="color: ${awayColor}">${awayName}</span>
+                                           <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${awayColor}"></span>`;
+                    }
                     mobileHtml += `<a href="${gameUrl}"
                         onclick="event.preventDefault(); openGameModal(${game.id})"
                         data-game-id="${game.id}"
@@ -884,10 +916,11 @@
                         data-sport-name="${game.category.sport.name || ''}"
                         data-category-name="${game.category.name || ''}"
                         data-match-label="${game.matchLabel || ''}"
-                        data-home-name="${game.teamHome.name}"
-                        data-home-color="${game.teamHome.colorHex}"
-                        data-away-name="${game.teamAway.name}"
-                        data-away-color="${game.teamAway.colorHex}"
+                        data-sport-type="${game.sportType || ''}"
+                        data-home-name="${homeName}"
+                        data-home-color="${homeColor}"
+                        data-away-name="${awayName}"
+                        data-away-color="${awayColor}"
                         data-score-home="${game.scoreHome ?? ''}"
                         data-score-away="${game.scoreAway ?? ''}"
                         data-status="${game.status}"
@@ -911,14 +944,7 @@
                                     <span class="text-xs text-slate-400 truncate">${game.category.name}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 mt-1">
-                                    ${game.eventTitle
-                                        ? `<span class="text-xs font-semibold text-slate-200">${game.eventTitle}</span>`
-                                        : `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamHome.colorHex}"></span>
-                                           <span class="text-xs font-medium" style="color: ${game.teamHome.colorHex}">${game.teamHome.name}</span>
-                                           <span class="text-xs text-slate-600 font-bold">VS</span>
-                                           <span class="text-xs font-medium" style="color: ${game.teamAway.colorHex}">${game.teamAway.name}</span>
-                                           <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${game.teamAway.colorHex}"></span>`
-                                    }
+                                    ${teamDisplay}
                                 </div>
                                 ${game.location ? `<div class="flex items-center gap-1 mt-1 text-[11px] text-slate-500">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>

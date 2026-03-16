@@ -98,7 +98,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="text-center px-2 py-3 text-slate-300">{{ $row['played'] }}</td>
+                        <td class="text-center px-2 py-3 text-slate-300" title="{{ $row['played'] }}/{{ $totalMatches }} matches played">{{ $row['played'] }}/{{ $totalMatches }}</td>
                         <td class="text-center px-2 py-3 text-green-400 font-medium">{{ $row['won'] }}</td>
                         <td class="text-center px-2 py-3 text-slate-400">{{ $row['drawn'] }}</td>
                         <td class="text-center px-2 py-3 text-red-400">{{ $row['lost'] }}</td>

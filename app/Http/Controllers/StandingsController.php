@@ -19,50 +19,48 @@ class StandingsController extends Controller
         $sports = Sport::orderBy('order')->with('categories')->get();
         $teams = Team::orderBy('name')->get()->keyBy('id');
 
+        // Step 1: Compute per-category standings using the same logic as scores/standings pages
+        // computeStandings() returns a numerically-indexed array (usort resets keys),
+        // each element: ['team' => Team, 'played' => int, 'won' => int, ..., 'points' => int]
+        // Points use: Win = 3, Draw = 1, Loss = 0 (places/racing use separate scale)
         $categoryStandings = [];
         foreach ($sports as $sport) {
             foreach ($sport->categories as $category) {
                 $games = $category->games()
                     ->select(['id', 'category_id', 'team_home_id', 'team_away_id', 'score_home', 'score_away', 'game_data', 'status', 'winner_id', 'disqualified_team'])
+                    ->where('status', 'completed')
                     ->get();
                 $categoryStandings[$category->id] = $this->computeStandings($games, $teams);
             }
         }
 
+        // Step 2: Aggregate per-sport standings (sum PTS from all categories of each sport)
         $sportStandings = [];
         foreach ($sports as $sport) {
             $sportPoints = [];
+
             foreach ($sport->categories as $category) {
-                foreach ($categoryStandings[$category->id] ?? [] as $teamId => $stats) {
-                    if (! isset($teams[$teamId])) {
+                foreach ($categoryStandings[$category->id] ?? [] as $row) {
+                    $teamId = $row['team']->id;
+
+                    // Skip teams that didn't play any games in this category
+                    if ($row['played'] === 0) {
                         continue;
                     }
+
                     if (! isset($sportPoints[$teamId])) {
                         $sportPoints[$teamId] = [
-                            'team' => $teams[$teamId],
+                            'team' => $row['team'],
                             'points' => 0,
-                            'goals_for' => 0,
-                            'goals_against' => 0,
                         ];
                     }
-                    $sportPoints[$teamId]['points'] += $stats['points'];
-                    $sportPoints[$teamId]['goals_for'] += $stats['goals_for'];
-                    $sportPoints[$teamId]['goals_against'] += $stats['goals_against'];
+
+                    $sportPoints[$teamId]['points'] += $row['points'];
                 }
             }
 
-            uasort($sportPoints, function ($a, $b) {
-                if ($a['points'] !== $b['points']) {
-                    return $b['points'] <=> $a['points'];
-                }
-                $gdA = $a['goals_for'] - $a['goals_against'];
-                $gdB = $b['goals_for'] - $b['goals_against'];
-                if ($gdA !== $gdB) {
-                    return $gdB <=> $gdA;
-                }
-
-                return $b['goals_for'] <=> $a['goals_for'];
-            });
+            // Sort by points descending
+            uasort($sportPoints, fn ($a, $b) => $b['points'] <=> $a['points']);
 
             $sportStandings[$sport->slug] = [
                 'sport' => $sport,
@@ -70,42 +68,24 @@ class StandingsController extends Controller
             ];
         }
 
+        // Step 3: Aggregate overall standings (sum PTS from all categories across all sports)
         $overallPoints = [];
-        foreach ($sports as $sport) {
-            foreach ($sport->categories as $category) {
-                foreach ($categoryStandings[$category->id] ?? [] as $teamId => $stats) {
-                    if (! isset($teams[$teamId])) {
-                        continue;
-                    }
-                    if (! isset($overallPoints[$teamId])) {
-                        $overallPoints[$teamId] = [
-                            'team' => $teams[$teamId],
-                            'points' => 0,
-                            'goals_for' => 0,
-                            'goals_against' => 0,
-                        ];
-                    }
-                    $overallPoints[$teamId]['points'] += $stats['points'];
-                    $overallPoints[$teamId]['goals_for'] += $stats['goals_for'];
-                    $overallPoints[$teamId]['goals_against'] += $stats['goals_against'];
+        foreach ($sportStandings as $sportData) {
+            foreach ($sportData['standings'] as $teamId => $row) {
+                if (! isset($overallPoints[$teamId])) {
+                    $overallPoints[$teamId] = [
+                        'team' => $row['team'],
+                        'points' => 0,
+                    ];
                 }
+                $overallPoints[$teamId]['points'] += $row['points'];
             }
         }
 
-        uasort($overallPoints, function ($a, $b) {
-            if ($a['points'] !== $b['points']) {
-                return $b['points'] <=> $a['points'];
-            }
-            $gdA = $a['goals_for'] - $a['goals_against'];
-            $gdB = $b['goals_for'] - $b['goals_against'];
-            if ($gdA !== $gdB) {
-                return $gdB <=> $gdA;
-            }
+        // Sort by points descending
+        uasort($overallPoints, fn ($a, $b) => $b['points'] <=> $a['points']);
 
-            return $b['goals_for'] <=> $a['goals_for'];
-        });
-
-        return view('admin.standings', compact('sports', 'sportStandings', 'overallPoints', 'categoryStandings'));
+        return view('admin.standings', compact('sports', 'sportStandings', 'overallPoints'));
     }
 
     public function show(Sport $sport, Category $category): View
@@ -140,16 +120,20 @@ class StandingsController extends Controller
         });
         $standings = $this->computeStandings($games, $teams);
 
-        return view('standings.show', compact('sport', 'category', 'games', 'sports', 'standings'));
+        $totalMatches = $games->flatMap(function ($game) {
+            return [$game->team_home_id, $game->team_away_id];
+        })->unique()->count() - 1;
+
+        return view('standings.show', compact('sport', 'category', 'games', 'sports', 'standings', 'totalMatches'));
     }
 
     private function getPlacePoints(int $place): int
     {
         return match ($place) {
-            1 => 10,
-            2 => 8,
-            3 => 6,
-            4 => 4,
+            1 => 4,
+            2 => 3,
+            3 => 2,
+            4 => 1,
             default => 0,
         };
     }
@@ -157,7 +141,7 @@ class StandingsController extends Controller
     /**
      * Compute round-robin standings from games.
      * Points: Win = 3, Draw = 1, Loss = 0
-     * For places type (racing): 1st=10, 2nd=8, 3rd=6, 4th=4
+     * For places type (racing): 1st=4, 2nd=3, 3rd=2, 4th=1
      */
     private function computeStandings($games, $teams): array
     {

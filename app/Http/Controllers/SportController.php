@@ -84,10 +84,6 @@ class SportController extends Controller
                     return $game->team_home_id === $team->id || $game->team_away_id === $team->id;
                 });
 
-                $completedGames = $teamGames->where('status', 'completed');
-
-                $stats = $this->computeTeamStats($completedGames, $team);
-
                 $teamIds = $allGames->pluck('team_home_id')->merge($allGames->pluck('team_away_id'))->unique()->filter();
                 $teams = $teamIds->isNotEmpty()
                     ? Team::whereIn('id', $teamIds)->orderBy('name')->get()->keyBy('id')
@@ -95,13 +91,21 @@ class SportController extends Controller
 
                 $standings = $this->computeStandings($allGames->where('status', 'completed'), $teams);
 
+                // Extract this team's stats and position from the standings array
+                // This ensures consistency with the standings pages (handles places/racing, disqualifications, etc.)
                 $teamPosition = null;
-                if ($stats['played'] > 0) {
-                    foreach ($standings as $index => $row) {
-                        if ($row['team']->id === $team->id) {
+                $stats = [
+                    'played' => 0, 'won' => 0, 'drawn' => 0, 'lost' => 0,
+                    'goals_for' => 0, 'goals_against' => 0, 'goal_difference' => 0, 'points' => 0,
+                ];
+                foreach ($standings as $index => $row) {
+                    if ($row['team']->id === $team->id) {
+                        $stats = $row;
+                        unset($stats['team']); // Remove team object, keep only stats
+                        if ($row['played'] > 0) {
                             $teamPosition = $index + 1;
-                            break;
                         }
+                        break;
                     }
                 }
 
@@ -246,10 +250,10 @@ class SportController extends Controller
     private function getPlacePoints(int $place): int
     {
         return match ($place) {
-            1 => 10,
-            2 => 8,
-            3 => 6,
-            4 => 4,
+            1 => 4,
+            2 => 3,
+            3 => 2,
+            4 => 1,
             default => 0,
         };
     }
@@ -257,7 +261,7 @@ class SportController extends Controller
     /**
      * Compute round-robin standings from games.
      * Points: Win = 3, Draw = 1, Loss = 0
-     * For places type (racing): 1st=10, 2nd=8, 3rd=6, 4th=4
+     * For places type (racing): 1st=4, 2nd=3, 3rd=2, 4th=1
      */
     private function computeStandings($games, $teams): array
     {
