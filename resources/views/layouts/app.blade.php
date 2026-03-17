@@ -134,7 +134,7 @@
         <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex items-center justify-between gap-4">
                 {{-- Logo --}}
                 <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                    <img src="{{ asset('logo.png') }}" alt="AIU Intramurals 2026" class="h-5 w-auto">
+                    <img src="{{ asset('logo.png') }}" alt="AIU Intramurals 2026" class="h-5 w-auto -rotate-90">
                     <img src="{{ asset('images/logo.svg') }}" alt="AIU Intramurals 2026" class="h-5 w-auto">
                 </a>
 
