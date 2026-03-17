@@ -8,6 +8,6 @@ $config = match($status) {
 };
 @endphp
 
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold {{ $config['class'] }}">
+<span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold {{ $config['class'] }}" data-status="{{ $status }}">
     {{ $config['label'] }}
 </span>

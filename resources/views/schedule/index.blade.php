@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Schedule')
 @section('content')
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="schedule-page max-w-7xl mx-auto px-4 py-6">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-2xl font-black text-white mb-1">Schedule</h1>
@@ -182,7 +182,7 @@
         </div>
         {{-- Calendar weeks --}}
         @foreach($calendarWeeks as $week)
-        <div class="grid grid-cols-7 border-t border-white/5">
+        <div class="grid grid-cols-7 border-t border-white/10">
             @foreach($week as $date)
             @php
                 $dateKey = $date->format('Y-m-d');
@@ -190,10 +190,10 @@
                 $isToday = $date->isSameDay($today);
                 $hasGames = $dayGames->isNotEmpty();
             @endphp
-            <div class="border-r border-b border-white/5 first:border-l min-h-[140px] flex flex-col {{ $isToday ? 'bg-sky-500/15' : ($hasGames ? 'bg-[#1e293b]/50' : 'bg-[#0f172a]/50') }}">
+            <div class="border-r border-b border-white/10 first:border-l min-h-[140px] flex flex-col {{ $isToday ? 'bg-sky-400/20' : ($hasGames ? 'bg-white/10' : 'bg-white/5') }}">
                 {{-- Date number --}}
                 <div class="px-2 pt-2 pb-1 flex items-center justify-between">
-                    <span class="text-sm font-bold {{ $isToday ? 'text-blue-400' : ($hasGames ? 'text-slate-200' : 'text-slate-600') }}">
+                    <span class="text-sm font-bold {{ $isToday ? 'text-blue-300' : ($hasGames ? 'text-slate-100' : 'text-slate-400') }}">
                         @if($date->day === 1 || $date->isSameDay($calendarStart))
                             {{ $date->format('M j') }}
                         @else
@@ -201,7 +201,7 @@
                         @endif
                     </span>
                     @if($isToday)
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Today</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300">Today</span>
                     @endif
                 </div>
                 {{-- Games list --}}
@@ -212,7 +212,7 @@
                         $statusColor = match($game->status) {
                             'in_progress' => 'border-l-green-500 bg-green-500/10',
                             'completed' => 'border-l-blue-500/50 bg-blue-500/5',
-                            default => 'border-l-slate-600 bg-white/[0.03]',
+                            default => 'border-l-slate-400 bg-white/10',
                         };
                     @endphp
                     @php
@@ -251,23 +251,23 @@
                        data-game-url="{{ route('games.show', ['sport' => $game->category?->sport?->slug, 'category' => $game->category?->slug, 'match' => $game->match_number ?? $game->id]) }}"
                        data-breakdown='@json($breakdownItems)'
                        data-period-labels='@json($periodLabels)'
-                       class="block border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group hover:bg-white/5 transition-colors cursor-pointer"
+                       class="block border-l-2 {{ $statusColor }} rounded-r px-1.5 py-1 group hover:bg-white/15 transition-colors cursor-pointer"
                        title="{{ $game->category?->sport?->name ?? '' }} {{ $game->category?->name ?? '' }} — {{ $gameTitle }} @ {{ $game->scheduled_at?->format('g:ia') }}{{ $game->location ? ' · ' . $game->location : '' }}">
                         <div class="flex items-center gap-1 min-w-0">
                             <x-sport-icon :sport="$game->category?->sport" size="xs" />
                             <span class="text-[11px] text-slate-400 truncate leading-tight">
-                                <span class="font-medium text-slate-300">{{ $game->scheduled_at?->format('g:ia') }}</span>
+                                <span class="font-semibold text-slate-200">{{ $game->scheduled_at?->format('g:ia') }}</span>
                                 {{ $game->category?->name ?? '' }}
                             </span>
                         </div>
                         <div class="flex items-center gap-1 mt-0.5 min-w-0">
                             @if($game->event_title)
-                            <span class="text-[10px] text-slate-300 truncate leading-tight font-medium">{{ $game->event_title }}</span>
+                            <span class="text-[10px] text-slate-200 truncate leading-tight font-medium">{{ $game->event_title }}</span>
                             @elseif($isRunning)
                             <span class="text-[10px] text-blue-300/70 truncate leading-tight font-medium">All teams compete</span>
                             @else
                             <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $game->teamHome?->color_hex ?? '#94a3b8' }}"></span>
-                            <span class="text-[10px] text-slate-400 truncate leading-tight">
+                            <span class="text-[10px] text-slate-200/80 truncate leading-tight">
                                 {{ $game->teamHome?->name ?? 'TBD' }}
                                 <span class="text-slate-600">vs</span>
                                 {{ $game->teamAway?->name ?? 'TBD' }}

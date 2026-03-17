@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[230px] md:min-h-[400px]">
+<section class="hero-section relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[230px] md:min-h-[400px]">
     <div class="absolute inset-0 z-0">
         @for($i = 1; $i <= 4; $i++)
         <img

@@ -1,22 +1,38 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0f172a" id="theme-color-meta">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Scoreboard') | 2026 INTRAMURALS</title>
-    <link rel="icon" type="image/png" href="{{ asset('sc-white.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Initial theme selection: prefer user setting, fall back to dark --}}
     <script>
-        document.querySelectorAll('.hero-slide').forEach((slide, i) => {
-            slide.classList.toggle('opacity-100', i === 0);
-            slide.classList.toggle('opacity-0', i !== 0);
-        });
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                var theme = (stored === 'light' || stored === 'dark')
+                    ? stored
+                    : 'dark'; // Default to dark
+
+                var root = document.documentElement;
+                root.dataset.theme = theme;
+
+                var meta = document.getElementById('theme-color-meta');
+                if (meta) {
+                    meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#e5e7eb');
+                }
+            } catch (e) {
+                // fail silently and keep default
+            }
+        })();
     </script>
 </head>
 <body class="bg-[#0f172a] text-white min-h-screen font-sans antialiased flex flex-col">
@@ -26,7 +42,7 @@
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             {{-- Logo --}}
             <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                <img src="{{ asset('sc-white.png') }}" alt="AIU Intramurals 2026" class="h-8 w-8 rounded">
+                <img src="{{ asset('images/logo.svg') }}" alt="AIU Intramurals 2026" class="h-8 w-8">
                 <span class="text-2xl font-bold tracking-tight text-white">
     <span class="text-white">2026 INTRAMURALS</span>
 </span>
@@ -54,6 +70,26 @@
                 </a> --}}
             </nav>
 
+            <div class="flex items-center gap-3">
+                {{-- Theme toggle --}}
+                <button
+                    type="button"
+                    id="theme-toggle"
+                    class="inline-flex items-center justify-center w-9 h-9 text-slate-200 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full"
+                    aria-label="Toggle color mode"
+                >
+                    <span data-icon="sun" class="hidden">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.75V3m0 18v-1.75M7.1 7.1 5.78 5.78m12.44 12.44L16.9 16.9M4.75 12H3m18 0h-1.75M7.1 16.9 5.78 18.22m12.44-12.44L16.9 7.1M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                        </svg>
+                    </span>
+                    <span data-icon="moon" class="hidden">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                        </svg>
+                    </span>
+                </button>
+
             {{-- Auth indicator (desktop) --}}
             @auth
             <div class="hidden md:flex items-center gap-3">
@@ -64,6 +100,7 @@
                 </form>
             </div>
             @endauth
+            </div>
 
             {{-- Mobile hamburger placeholder (bottom nav handles mobile) --}}
         </div>
@@ -97,8 +134,8 @@
         <div class="max-w-7xl mx-auto px-4 py-6 pb-20 md:pb-6 flex items-center justify-between gap-4">
                 {{-- Logo --}}
                 <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                    <img src="{{ asset('logo.png') }}" alt="AIU Scoreboard" class="h-5 w-auto">
-                    <img src="{{ asset('sc-white.png') }}" alt="AIU Scoreboard" class="h-5 w-auto">
+                    <img src="{{ asset('logo.png') }}" alt="AIU Intramurals 2026" class="h-5 w-auto">
+                    <img src="{{ asset('images/logo.svg') }}" alt="AIU Intramurals 2026" class="h-5 w-auto">
                 </a>
 
                 {{-- Copyright --}}
@@ -161,5 +198,60 @@
     </nav>
 
     @stack('scripts')
+
+    {{-- Theme toggle behavior --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var root = document.documentElement;
+            var toggle = document.getElementById('theme-toggle');
+            if (!toggle) return;
+
+            var iconSun = toggle.querySelector('[data-icon="sun"]');
+            var iconMoon = toggle.querySelector('[data-icon="moon"]');
+
+            function applyTheme(theme) {
+                root.dataset.theme = theme;
+                try {
+                    localStorage.setItem('theme', theme);
+                } catch (e) {}
+
+                if (iconSun && iconMoon) {
+                    if (theme === 'light') {
+                        iconSun.classList.remove('hidden');
+                        iconMoon.classList.add('hidden');
+                    } else {
+                        iconSun.classList.add('hidden');
+                        iconMoon.classList.remove('hidden');
+                    }
+                }
+
+                var meta = document.getElementById('theme-color-meta');
+                if (meta) {
+                    meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#e5e7eb');
+                }
+            }
+
+            function currentTheme() {
+                var t = root.dataset.theme;
+                if (t === 'light' || t === 'dark') return t;
+                try {
+                    var stored = localStorage.getItem('theme');
+                    if (stored === 'light' || stored === 'dark') return stored;
+                } catch (e) {}
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    return 'dark';
+                }
+                return 'light';
+            }
+
+            // Initialize button icon state
+            applyTheme(currentTheme());
+
+            toggle.addEventListener('click', function () {
+                var next = currentTheme() === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+            });
+        });
+    </script>
 </body>
 </html>
