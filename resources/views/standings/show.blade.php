@@ -119,7 +119,7 @@
     </div>
     @else
     <div class="bg-[#1e293b] rounded-2xl border border-white/5 p-8 text-center mb-8">
-        <p class="text-slate-300 text-sm">See you at the Closing Ceremony!<br><br>Final standings will be released after the official announcement on Sunday, March 22.</p>
+        <p class="text-slate-300 text-sm"><strong class="block text-base text-white">See you at the Closing Ceremony!</strong><br>Final standings will be released after the official announcement on Sunday, March 22.</p>
     </div>
     @endif
 
