@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
@@ -53,5 +54,10 @@ Route::middleware('auth')->group(function () {
         Route::get('sports/{sport}/edit', [SportController::class, 'adminEdit'])->name('sports.edit');
         Route::put('sports/{sport}', [SportController::class, 'adminUpdate'])->name('sports.update');
         Route::get('standings', [StandingsController::class, 'adminIndex'])->name('standings.index');
+        Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+        Route::get('announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
+        Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::get('announcements/{announcement}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
+        Route::put('announcements/{announcement}', [AnnouncementController::class, 'update'])->name('announcements.update');
     });
 });

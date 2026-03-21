@@ -4,6 +4,12 @@
 
 @section('content')
 
+@if($announcement)
+<x-announcement-modal :title="$announcement->title">
+    {!! $announcement->content !!}
+</x-announcement-modal>
+@endif
+
 {{-- Hero --}}
 <section class="hero-section relative bg-gradient-to-br from-[#0c1445] via-[#1e3a8a] to-[#0f172a] overflow-hidden min-h-[230px] md:min-h-[400px]">
     <div class="absolute inset-0 z-0">

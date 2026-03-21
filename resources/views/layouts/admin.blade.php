@@ -33,6 +33,10 @@
                    class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
                     Sports
                 </a>
+                <a href="{{ route('admin.announcements.index') }}"
+                   class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.announcements.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
+                    Announcements
+                </a>
                 <a href="{{ route('admin.standings.index') }}"
                    class="hidden md:inline-flex text-sm px-3 py-1.5 rounded-lg font-medium transition-colors {{ request()->routeIs('admin.standings.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10' }}">
                     Standings
@@ -97,6 +101,11 @@
                class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.sports.*') ? 'text-blue-400' : 'text-slate-400' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Sports
+            </a>
+            <a href="{{ route('admin.announcements.index') }}"
+               class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.announcements.*') ? 'text-blue-400' : 'text-slate-400' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                Announce
             </a>
             <a href="{{ route('admin.standings.index') }}"
                class="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors {{ request()->routeIs('admin.standings.*') ? 'text-blue-400' : 'text-slate-400' }}">

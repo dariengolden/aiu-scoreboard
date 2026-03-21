@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use App\Models\Game;
 use Illuminate\View\View;
 
@@ -96,6 +97,8 @@ class HomeController extends Controller
                 ->get();
         });
 
-        return view('home', compact('liveGames', 'recentResults', 'upcomingGames'));
+        $announcement = Announcement::getActive();
+
+        return view('home', compact('liveGames', 'recentResults', 'upcomingGames', 'announcement'));
     }
 }
