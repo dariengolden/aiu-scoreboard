@@ -4,6 +4,8 @@
 
 @section('content')
 
+@php $hideStandings = true; @endphp
+
 <div class="max-w-5xl mx-auto px-4 py-6">
 
     {{-- Breadcrumb --}}
@@ -36,6 +38,7 @@
         @endforeach
     </div>
 
+    @if(!$hideStandings)
     {{-- Standings Table --}}
     <div class="bg-[#1e293b] rounded-2xl border border-white/5 overflow-hidden mb-8">
         <div class="px-4 py-3 border-b border-white/5">
@@ -114,6 +117,11 @@
             </table>
         </div>
     </div>
+    @else
+    <div class="bg-[#1e293b] rounded-2xl border border-white/5 p-8 text-center mb-8">
+        <p class="text-slate-300 text-sm">See you at the Closing Ceremony!<br><br>Final standings will be released after the official announcement on Sunday, March 22.</p>
+    </div>
+    @endif
 
     {{-- All Games --}}
     <div class="mb-4">
