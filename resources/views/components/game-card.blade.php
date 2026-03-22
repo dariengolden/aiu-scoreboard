@@ -165,8 +165,8 @@
                 @endif
             @endif
 
-            {{-- Draw/Disqualified indicator --}}
-            @if($game->isCompleted() && $game->score_home !== null && $game->score_away !== null)
+            {{-- Draw/Disqualified indicator (not for Running/Places type) --}}
+            @if($game->isCompleted() && !$isRunning && $game->score_home !== null && $game->score_away !== null)
                 <div class="text-center pt-1">
                     @if($game->disqualified_team)
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ $game->disqualified_team === 'home' ? $game->teamHome?->name : ($game->disqualified_team === 'away' ? $game->teamAway?->name : 'Both') }} TEAM DISQUALIFIED</span>
