@@ -253,6 +253,24 @@ class GameController extends Controller
      */
     public function disqualify(Request $request, Game $game): RedirectResponse
     {
+        $sportConfig = $game->sport_config;
+        $sportType = $sportConfig['type'] ?? 'simple';
+        $isPlaces = $sportType === 'places';
+
+        if ($isPlaces) {
+            $validated = $request->validate([
+                'disqualify_team' => ['required'],
+                'disqualification_reason' => ['nullable', 'string', 'max:1000'],
+            ]);
+            $teamId = (int) $validated['disqualify_team'];
+            $game->disqualified_team = $teamId;
+            $game->disqualification_reason = $validated['disqualification_reason'] ?? null;
+            $game->save();
+
+            return redirect()->route('games.edit', $game)
+                ->with('success', 'Team disqualified successfully.');
+        }
+
         $validated = $request->validate([
             'disqualify_team' => ['required', 'in:home,away,both'],
             'disqualification_reason' => ['nullable', 'string', 'max:1000'],
@@ -266,18 +284,13 @@ class GameController extends Controller
         $game->disqualified_team = $side;
         $game->disqualification_reason = $validated['disqualification_reason'] ?? null;
 
-        $sportConfig = $game->sport_config;
-        $sportType = $sportConfig['type'] ?? 'simple';
-        $isPlaces = $sportType === 'places';
-
-        if ($side === 'home' && ! $isPlaces) {
+        if ($side === 'home') {
             $game->winner_id = $game->team_away_id;
             $this->addWinLoss($game->team_away_id, $game->team_home_id);
-        } elseif ($side === 'away' && ! $isPlaces) {
+        } elseif ($side === 'away') {
             $game->winner_id = $game->team_home_id;
             $this->addWinLoss($game->team_home_id, $game->team_away_id);
         } else {
-            // both disqualified — no winner, both get loss
             $game->winner_id = null;
             if ($game->team_home_id) {
                 $team = \App\Models\Team::find($game->team_home_id);

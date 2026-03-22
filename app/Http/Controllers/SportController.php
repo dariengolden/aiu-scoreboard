@@ -250,10 +250,10 @@ class SportController extends Controller
     private function getPlacePoints(int $place): int
     {
         return match ($place) {
-            1 => 4,
-            2 => 3,
-            3 => 2,
-            4 => 1,
+            1 => 10,
+            2 => 8,
+            3 => 6,
+            4 => 4,
             default => 0,
         };
     }
@@ -292,12 +292,17 @@ class SportController extends Controller
             // Handle places/racing type games
             $gameData = $game->game_data ?? [];
             $places = $gameData['places'] ?? [];
+            $disqualifiedTeamId = $game->disqualified_team ? (int) $game->disqualified_team : null;
 
             if (! empty($places) && is_array($places)) {
                 foreach ($places as $place => $teamId) {
                     if ($teamId && isset($stats[$teamId])) {
                         $stats[$teamId]['played']++;
-                        $stats[$teamId]['points'] += $this->getPlacePoints((int) $place);
+                        if ($teamId == $disqualifiedTeamId) {
+                            $stats[$teamId]['points'] += 0;
+                        } else {
+                            $stats[$teamId]['points'] += $this->getPlacePoints((int) $place);
+                        }
                     }
                 }
 

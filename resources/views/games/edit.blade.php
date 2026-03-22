@@ -196,8 +196,29 @@
         <div id="places-scoring-section">
             <p class="text-xs text-slate-400 mb-4">Assign teams to places (1st, 2nd, 3rd, 4th)</p>
             
+            {{-- Disqualified Banner --}}
+            @if($game->disqualified_team && is_numeric($game->disqualified_team))
+            <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                    <span class="text-sm text-red-300">
+                        <span class="font-bold">{{ App\Models\Team::find($game->disqualified_team)?->name ?? 'Team' }}</span> has been disqualified (0 pts)
+                    </span>
+                </div>
+                <form action="{{ route('games.reset', $game) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="text-xs text-red-400 hover:text-red-300 font-semibold underline">
+                        Clear DQ
+                    </button>
+                </form>
+            </div>
+            @endif
+            
             <div class="space-y-3">
                 @for($i = 1; $i <= 4; $i++)
+                @php $isDq = $game->disqualified_team && is_numeric($game->disqualified_team) && ($gameData['places'][$i] ?? null) == $game->disqualified_team; @endphp
                 <div class="flex items-center gap-3">
                     <div class="w-16 flex-shrink-0">
                         @if($i === 1)
@@ -211,7 +232,7 @@
                         @endif
                     </div>
                     <select name="places[{{ $i }}]" id="place-{{ $i }}" 
-                            class="place-select flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="place-select flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $isDq ? 'border-red-500/50 bg-red-500/10' : '' }}">
                         <option value="">-- Select Team --</option>
                         @foreach($teams as $team)
                         <option value="{{ $team->id }}" {{ (($gameData['places'][$i] ?? null) == $team->id) ? 'selected' : '' }}>
@@ -219,9 +240,27 @@
                         </option>
                         @endforeach
                     </select>
+                    @if($isDq)
+                    <span class="px-2 py-2 rounded-lg text-xs font-bold border border-red-500 bg-red-500 text-white shrink-0">
+                        DQ
+                    </span>
+                    @else
+                    <button type="button" data-dq-place="{{ $i }}" data-dq-team=""
+                            class="dq-place-btn px-2 py-2 rounded-lg text-xs font-bold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all shrink-0" title="Disqualify this team (0 pts)">
+                        DQ
+                    </button>
+                    @endif
                 </div>
                 @endfor
             </div>
+            
+            {{-- Hidden form for DQ submission --}}
+            <form id="dq-place-form" method="POST" action="{{ route('games.disqualify', $game) }}" class="hidden">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="disqualify_team" id="dq-place-team-input" value="">
+                <input type="hidden" name="disqualification_reason" id="dq-place-reason-input" value="">
+            </form>
         </div>
         @else
 
@@ -813,6 +852,37 @@
             }
         });
     });
+
+    // ── Disqualification for Places (Running) ─────────────────────────────────────
+    const dqPlaceForm = document.getElementById('dq-place-form');
+    const dqPlaceTeamInput = document.getElementById('dq-place-team-input');
+
+    if (dqPlaceForm && dqPlaceTeamInput) {
+        document.querySelectorAll('.dq-place-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const placeNum = btn.dataset.dqPlace;
+                const placeSelect = document.getElementById(`place-${placeNum}`);
+                const selectedTeamId = placeSelect ? placeSelect.value : '';
+                
+                if (!selectedTeamId) {
+                    alert('Please select a team in this place first.');
+                    return;
+                }
+                
+                const selectedTeamName = placeSelect.options[placeSelect.selectedIndex].text;
+                const placeLabel = placeNum === '1' ? '1st' : placeNum === '2' ? '2nd' : placeNum === '3' ? '3rd' : '4th';
+                
+                const title = `Disqualify ${selectedTeamName}?`;
+                const message = `Are you sure you want to disqualify ${selectedTeamName} from ${placeLabel} place? They will receive 0 points.`;
+                
+                const confirmed = await showModal(title, message, 'Disqualify');
+                if (confirmed) {
+                    dqPlaceTeamInput.value = selectedTeamId;
+                    dqPlaceForm.submit();
+                }
+            });
+        });
+    }
 
     // ── Reset Places Confirmation (Running) ─────────────────────────────────────
     const resetPlacesBtn = document.getElementById('reset-places-btn');

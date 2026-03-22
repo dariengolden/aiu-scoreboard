@@ -10,10 +10,10 @@ function getTeamResult($id) {
 }
 function getPlacePoints($place) {
     return match($place) {
-        1 => 10,
-        2 => 8,
-        3 => 6,
-        4 => 4,
+        1 => 4,
+        2 => 3,
+        3 => 2,
+        4 => 1,
         default => 0,
     };
 }
@@ -75,7 +75,8 @@ function getPlacePoints($place) {
                         @for($i = 1; $i <= 4; $i++)
                         @php $placeTeam = getTeamResult($places[$i] ?? null); @endphp
                         @php $placePoints = getPlacePoints($i); @endphp
-                        <div class="flex items-center justify-between bg-white/5 rounded-xl py-3 px-4">
+                        @php $isDq = $game->disqualified_team && is_numeric($game->disqualified_team) && ($places[$i] ?? null) == $game->disqualified_team; @endphp
+                        <div class="flex items-center justify-between bg-white/5 rounded-xl py-3 px-4 {{ $isDq ? 'border border-red-500/30' : '' }}">
                             <div class="flex items-center gap-3">
                                 @if($i === 1)
                                     <span class="text-lg">🥇</span>
@@ -86,13 +87,22 @@ function getPlacePoints($place) {
                                 @else
                                     <span class="text-sm text-slate-500 font-bold w-6">4th</span>
                                 @endif
-                                <span class="text-sm font-bold {{ $placeTeam ? 'text-white' : 'text-slate-500' }}">
+                                <span class="text-sm font-bold {{ $placeTeam ? ($isDq ? 'text-red-400 line-through' : 'text-white') : 'text-slate-500' }}">
                                     {{ $placeTeam?->name ?? '—' }}
                                 </span>
+                                @if($isDq)
+                                    <span class="text-xs font-bold text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full">DQ</span>
+                                @endif
                             </div>
+                            @if($isDq)
+                            <span class="text-xs font-bold text-slate-500 bg-slate-500/20 px-2 py-1 rounded-full">
+                                0 pts
+                            </span>
+                            @else
                             <span class="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">
                                 +{{ $placePoints }} pts
                             </span>
+                            @endif
                         </div>
                         @endfor
                     </div>
