@@ -52,10 +52,12 @@ class StandingsController extends Controller
                         $sportPoints[$teamId] = [
                             'team' => $row['team'],
                             'points' => 0,
+                            'goal_difference' => 0,
                         ];
                     }
 
                     $sportPoints[$teamId]['points'] += $row['points'];
+                    $sportPoints[$teamId]['goal_difference'] += $row['goal_difference'];
                 }
             }
 
@@ -76,9 +78,11 @@ class StandingsController extends Controller
                     $overallPoints[$teamId] = [
                         'team' => $row['team'],
                         'points' => 0,
+                        'goal_difference' => 0,
                     ];
                 }
                 $overallPoints[$teamId]['points'] += $row['points'];
+                $overallPoints[$teamId]['goal_difference'] += $row['goal_difference'];
             }
         }
 

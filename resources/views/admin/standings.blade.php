@@ -26,6 +26,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Rank</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Team</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Points</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">GD</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -52,6 +53,11 @@
                                 {{ $stat['points'] }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="text-sm font-medium {{ $stat['goal_difference'] > 0 ? 'text-green-400' : ($stat['goal_difference'] < 0 ? 'text-red-400' : 'text-slate-400') }}">
+                                {{ $stat['goal_difference'] > 0 ? '+' : '' }}{{ $stat['goal_difference'] }}
+                            </span>
+                        </td>
                     </tr>
                     @php $rank++ @endphp
                     @endforeach
@@ -76,6 +82,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Rank</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Team</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Points</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">GD</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -100,6 +107,11 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-lg text-sm font-bold bg-blue-500/20 text-blue-400">
                                 {{ $stat['points'] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="text-sm font-medium {{ $stat['goal_difference'] > 0 ? 'text-green-400' : ($stat['goal_difference'] < 0 ? 'text-red-400' : 'text-slate-400') }}">
+                                {{ $stat['goal_difference'] > 0 ? '+' : '' }}{{ $stat['goal_difference'] }}
                             </span>
                         </td>
                     </tr>
