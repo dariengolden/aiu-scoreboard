@@ -92,6 +92,45 @@ class StandingsController extends Controller
         return view('admin.standings', compact('sports', 'sportStandings', 'overallPoints'));
     }
 
+    public function adminShow(Sport $sport, Category $category): View
+    {
+        abort_unless($category->sport_id === $sport->id, 404);
+
+        $games = cache()->remember('standings_games_'.$category->id, 30, function () use ($category) {
+            return $category->games()
+                ->select([
+                    'id',
+                    'category_id',
+                    'team_home_id',
+                    'team_away_id',
+                    'score_home',
+                    'score_away',
+                    'game_data',
+                    'status',
+                    'winner_id',
+                    'disqualified_team',
+                ])
+                ->with(['teamHome', 'teamAway', 'winner'])
+                ->orderBy('match_number')
+                ->get();
+        });
+
+        $sports = cache()->remember('standings_sports_ordered', 600, function () {
+            return Sport::orderBy('order')->get();
+        });
+
+        $teams = cache()->remember('teams_by_id', 600, function () {
+            return Team::orderBy('name')->get()->keyBy('id');
+        });
+        $standings = $this->computeStandings($games, $teams);
+
+        $totalMatches = $games->flatMap(function ($game) {
+            return [$game->team_home_id, $game->team_away_id];
+        })->unique()->count() - 1;
+
+        return view('admin.standings.show', compact('sport', 'category', 'games', 'sports', 'standings', 'totalMatches'));
+    }
+
     public function show(Sport $sport, Category $category): View
     {
         abort_unless($category->sport_id === $sport->id, 404);

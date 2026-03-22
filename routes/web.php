@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::get('sports/{sport}/edit', [SportController::class, 'adminEdit'])->name('sports.edit');
         Route::put('sports/{sport}', [SportController::class, 'adminUpdate'])->name('sports.update');
         Route::get('standings', [StandingsController::class, 'adminIndex'])->name('standings.index');
+        Route::get('standings/{sport}/{category}', [StandingsController::class, 'adminShow'])->name('standings.show');
         Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
         Route::get('announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
         Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store');

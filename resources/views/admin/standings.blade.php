@@ -72,8 +72,20 @@
     @if($sportData && count($sportData['standings']) > 0)
     <div class="bg-slate-800 rounded-xl border border-white/10 overflow-hidden">
         <div class="px-6 py-4 border-b border-white/10 bg-slate-700/50">
-            <h2 class="text-lg font-semibold text-white">{{ $sport->name }}</h2>
-            <p class="text-sm text-slate-400 mt-1">Points from {{ $sport->categories->count() }} {{ Str::plural('category', $sport->categories->count()) }}</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-white">{{ $sport->name }}</h2>
+                    <p class="text-sm text-slate-400 mt-1">Points from {{ $sport->categories->count() }} {{ Str::plural('category', $sport->categories->count()) }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($sport->categories as $cat)
+                    <a href="{{ route('admin.standings.show', [$sport, $cat]) }}"
+                       class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 transition-colors">
+                        {{ $cat->name }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">
