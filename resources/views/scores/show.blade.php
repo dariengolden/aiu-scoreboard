@@ -4,8 +4,6 @@
 
 @section('content')
 
-@php $hideStandings = true; @endphp
-
 <div class="max-w-7xl mx-auto px-4 py-6">
 
     {{-- Breadcrumb --}}
@@ -73,7 +71,6 @@
                 $standings = $standingsByCategory[$category->id] ?? [];
             @endphp
 
-            @if(!$hideStandings)
             {{-- Standings table --}}
             <div class="bg-[#1e293b] rounded-2xl border border-white/5 overflow-hidden mb-4">
                 <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
@@ -157,12 +154,6 @@
                     </table>
                 </div>
             </div>
-            @else
-            <div class="bg-[#1e293b] rounded-2xl border border-white/5 p-8 text-center mb-4">
-                <p class="text-slate-300 text-sm"><strong class="block text-base text-white">See you at the Closing Ceremony!</strong><br>Final standings will be released after the official announcement on Sunday, March 22.</p>
-            </div>
-            @endif
-
             {{-- Matches --}}
             <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Matches</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
