@@ -72,15 +72,26 @@
             <p class="mt-1 text-xs text-slate-500 ml-8">When enabled, the modal will appear once for each visitor.</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="submit"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
-                Save Changes
-            </button>
-            <a href="{{ route('admin.announcements.index') }}"
-               class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors">
-                Cancel
-            </a>
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
+                    Save Changes
+                </button>
+                <a href="{{ route('admin.announcements.index') }}"
+                   class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors">
+                    Cancel
+                </a>
+            </div>
+            <form action="{{ route('admin.announcements.destroy', $announcement) }}" method="POST"
+                  onsubmit="return confirm('Delete this announcement?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300 font-medium rounded-lg transition-colors">
+                    Delete
+                </button>
+            </form>
         </div>
     </div>
 </form>

@@ -56,4 +56,12 @@ class AnnouncementController extends Controller
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement updated successfully.');
     }
+
+    public function destroy(Announcement $announcement)
+    {
+        $announcement->delete();
+
+        return redirect()->route('admin.announcements.index')
+            ->with('success', 'Announcement deleted successfully.');
+    }
 }
