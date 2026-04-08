@@ -45,4 +45,26 @@ class Team extends Model
             default => 'bg-gray-500',
         };
     }
+
+    public function getGlowColorClass(): string
+    {
+        return match (strtolower($this->name)) {
+            'red' => 'shadow-red-500/40',
+            'blue' => 'shadow-blue-500/40',
+            'purple' => 'shadow-purple-500/40',
+            'pink' => 'shadow-pink-500/40',
+            default => 'shadow-gray-500/40',
+        };
+    }
+
+    public function getBarGradientStyle(): string
+    {
+        return match (strtolower($this->name)) {
+            'red' => 'background: linear-gradient(90deg, #ef4444, #f97316)',
+            'blue' => 'background: linear-gradient(90deg, #3b82f6, #06b6d4)',
+            'purple' => 'background: linear-gradient(90deg, #a855f7, #8b5cf6)',
+            'pink' => 'background: linear-gradient(90deg, #ec4899, #f43f5e)',
+            default => 'background: linear-gradient(90deg, #6b7280, #9ca3af)',
+        };
+    }
 }
